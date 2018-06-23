@@ -4,6 +4,7 @@ import Point = Phaser.Geom.Point;
 import {Grid} from "./grid";
 import {ExtPoint} from "./ext-point";
 import Rectangle = Phaser.Geom.Rectangle;
+import {FilledPolygons} from "./filled-polygons";
 
 /**
  * Point with additional helper methods. Decorates existing Phaser Point class.
@@ -39,23 +40,23 @@ export class ExtPolygon {
         return ((Math.abs(this.polygon.area) / frameArea) * 100).toFixed(1);
     }
 
-    draw(grid: Grid) {
+    draw(filledPolygons: FilledPolygons) {
         const points = this.polygon.points;
 
-        grid.graphics.beginPath();
-        grid.graphics.moveTo(points[0].x, points[0].y);
+        filledPolygons.graphics.beginPath();
+        filledPolygons.graphics.moveTo(points[0].x, points[0].y);
 
         for (let i = 1; i < points.length; i++) {
-            grid.graphics.lineTo(points[i].x, points[i].y);
+            filledPolygons.graphics.lineTo(points[i].x, points[i].y);
         }
 
-        grid.graphics.lineTo(points[0].x, points[0].y);
+        filledPolygons.graphics.lineTo(points[0].x, points[0].y);
 
-        grid.graphics.closePath();
-        grid.graphics.strokePath();
-        grid.graphics.fillPath();
+        filledPolygons.graphics.closePath();
+        filledPolygons.graphics.strokePath();
+        filledPolygons.graphics.fillPath();
 
-        this.lines.forEach((line) => grid.lineGraphics.strokeLineShape(line));
+        this.lines.forEach((line) => filledPolygons.graphics.strokeLineShape(line));
     }
 
     outlineIntersects(point: ExtPoint): boolean {
