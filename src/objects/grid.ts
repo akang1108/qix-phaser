@@ -1,11 +1,12 @@
 import Graphics = Phaser.GameObjects.Graphics;
 import Rectangle = Phaser.Geom.Rectangle;
-import Line = Phaser.Geom.Line;
 import {config} from "../main";
 import {Player} from "./player";
 import {ExtPoint} from "./ext-point";
 import Qix from "../scenes/qix";
 import {FilledPolygons} from "./filled-polygons";
+import {ExtRectangle} from "./ext-rectangle";
+import {CurrentLines} from "./current-lines";
 
 
 export class Grid {
@@ -17,38 +18,30 @@ export class Grid {
 
     qix: Qix;
     filledPolygons: FilledPolygons;
+    currentLines: CurrentLines;
 
     frameGraphics: Graphics;
-    lineGraphics: Graphics;
-
-    frame: Rectangle;
+    frame: ExtRectangle;
     frameArea: number;
-
-    currentPolygonPoints: ExtPoint[] = [];
-    currentLines: Line[] = [];
-    currentLine: Line;
 
     constructor(qix: Qix) {
         this.qix = qix;
         this.filledPolygons = new FilledPolygons(qix);
+        this.currentLines = new CurrentLines(qix);
 
         Grid.FRAME_HEIGHT = Math.round(config.height as number * Grid.FRAME_HEIGHT_PERCENT);
         this.frameGraphics = qix.add.graphics();
         this.frameGraphics.lineStyle(1, Grid.LINE_COLOR);
         this.frameGraphics.fillStyle(Grid.FILL_COLOR);
 
-        this.lineGraphics = qix.add.graphics();
-        this.lineGraphics.lineStyle(1, Grid.LINE_COLOR);
-        this.lineGraphics.fillStyle(Grid.FILL_COLOR);
-
-        this.frame = new Rectangle(
+        this.frame = new ExtRectangle(new Rectangle(
             Grid.FRAME_MARGIN,
             Grid.FRAME_MARGIN,
             config.width as number - 2 * Grid.FRAME_MARGIN,
-            Grid.FRAME_HEIGHT);
-        this.frameArea = this.frame.height * this.frame.width;
+            Grid.FRAME_HEIGHT));
 
-        this.lineGraphics.strokeRectShape(this.frame);
+        this.frameArea = this.frame.rectangle.height * this.frame.rectangle.width;
+        this.frameGraphics.strokeRectShape(this.frame.rectangle);
     }
 
     update(player: Player) {
@@ -60,11 +53,11 @@ export class Grid {
             return;
         }
 
-        if (this.filledPolygons.withinAPolygon(player.point())) {
+        if (this.filledPolygons.pointWithinPolygon(player.point())) {
             console.log('within a polygon');
         }
 
-        this.updateLine(player);
+        this.currentLines.updateLine(player);
 
         this.checkAndUpdateForClosedLoop(player);
 
@@ -75,37 +68,13 @@ export class Grid {
         const onExisting = this.onExistingLine(player);
 
         if (onExisting && player.previousOnExisting) {
-            this.currentPolygonPoints = [];
-            this.currentLine = null;
+            this.currentLines.currentPolygonPoints = [];
+            this.currentLines.currentLine = null;
             return true;
         } else {
             player.previousOnExisting = onExisting;
             return false;
         }
-    }
-
-    updateLine(player: Player) {
-        // Create new line
-        if (! this.currentLine) {
-            this.createCurrentLine(player);
-        }
-        // Moving along existing line
-        else if (this.isHorizontal(this.currentLine) && player.movingLeft()) {
-            this.currentLine.x1 = player.x();
-        } else if (this.isHorizontal(this.currentLine) && player.movingRight()) {
-            this.currentLine.x2 = player.x();
-        } else if (this.isVertical(this.currentLine) && player.movingUp()) {
-            this.currentLine.y1 = player.y();
-        } else if (this.isVertical(this.currentLine) && player.movingDown()) {
-            this.currentLine.y2 = player.y();
-        }
-        // Switching directions
-        else {
-            this.currentLines.push(this.currentLine);
-            this.createCurrentLine(player);
-        }
-
-        this.frameGraphics.strokeLineShape(this.currentLine);
     }
 
     checkAndUpdateForClosedLoop(player: Player): boolean {
@@ -118,48 +87,16 @@ export class Grid {
 
         if (onExistingLine) {
             closedLoop = true;
-            this.currentPolygonPoints.push(player.point());
-            this.filledPolygons.drawFilledPolygon(this.currentPolygonPoints);
+            this.currentLines.currentPolygonPoints.push(player.point());
+            this.filledPolygons.drawFilledPolygon(this.currentLines.currentPolygonPoints);
         }
 
         return closedLoop;
     }
 
-    createCurrentLine(player: Player) {
-        this.currentPolygonPoints.push(player.previousPoint);
-        this.currentLine = new Line(
-            player.previousPoint.x(),
-            player.previousPoint.y(),
-            player.x(),
-            player.y());
-    }
-
-    isHorizontal(line: Line): boolean {
-        return line.x1 != line.x2 && line.y1 == line.y2;
-    }
-
-    isVertical(line: Line): boolean {
-        return line.x1 == line.x2 && line.y1 != line.y2;
-    }
-
     onExistingLine(player: Player): boolean {
-        return this.onFramePoint(player.point()) || this.filledPolygons.onPolygonLinePoint(player.point());
+        return this.frame.pointOnOutline(player.point().point) || this.filledPolygons.pointOnLine(player.point());
     }
-
-    onFramePoint(point: ExtPoint): boolean {
-        const onFrame =
-            this.onTopSideOfRectangle(point, this.frame) ||
-            this.onRightSideOfRectangle(point, this.frame) ||
-            this.onBottomSideOfRectangle(point, this.frame) ||
-            this.onLeftSideOfRectangle(point, this.frame);
-
-        return onFrame;
-    }
-
-    onTopSideOfRectangle(point: ExtPoint, rectangle:Rectangle) { return Phaser.Geom.Intersects.PointToLine(point.point, rectangle.getLineA()) }
-    onRightSideOfRectangle(point: ExtPoint, rectangle:Rectangle) { return Phaser.Geom.Intersects.PointToLine(point.point, rectangle.getLineB()) }
-    onBottomSideOfRectangle(point: ExtPoint, rectangle:Rectangle) { return Phaser.Geom.Intersects.PointToLine(point.point, rectangle.getLineC()) }
-    onLeftSideOfRectangle(point: ExtPoint, rectangle:Rectangle) { return Phaser.Geom.Intersects.PointToLine(point.point, rectangle.getLineD()) }
 
     isIllegalMove(player: Player, cursors: CursorKeys): boolean {
         const newPosition = player.getMove(cursors);
@@ -167,12 +104,11 @@ export class Grid {
         newPosition.y += Player.RADIUS;
 
         const outOfBounds =
-            (newPosition.x < this.frame.x) ||
-            (newPosition.x > this.frame.x + this.frame.width) ||
-            (newPosition.y < this.frame.y) ||
-            (newPosition.y > this.frame.y + this.frame.height);
+            (newPosition.x < this.frame.rectangle.x) ||
+            (newPosition.x > this.frame.rectangle.x + this.frame.rectangle.width) ||
+            (newPosition.y < this.frame.rectangle.y) ||
+            (newPosition.y > this.frame.rectangle.y + this.frame.rectangle.height);
 
-        return outOfBounds || this.filledPolygons.withinAPolygon(new ExtPoint(newPosition));
+        return outOfBounds || this.filledPolygons.pointWithinPolygon(new ExtPoint(newPosition));
     }
-
 }

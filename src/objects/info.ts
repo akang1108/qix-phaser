@@ -31,9 +31,9 @@ export class Info {
         this.graphics.fillStyle(Info.TEXT_COLOR);
         this.rect = new Rectangle(
             Grid.FRAME_MARGIN,
-            scene.grid.frame.bottom + Grid.FRAME_MARGIN,
+            scene.grid.frame.rectangle.bottom + Grid.FRAME_MARGIN,
             config.width as number - 2*Grid.FRAME_MARGIN,
-            config.height as number - scene.grid.frame.height - 3*Grid.FRAME_MARGIN);
+            config.height as number - scene.grid.frame.rectangle.height - 3*Grid.FRAME_MARGIN);
         this.graphics.strokeRectShape(this.rect);
         this.text = scene.add.text(
             Grid.FRAME_MARGIN + Info.PADDING,

@@ -27,4 +27,5 @@ export class ExtPoint {
     isRightAndBelowOf(p: ExtPoint): boolean { return this.isRightOf(p) && this.isBelowOf(p); }
     isOnSameVerticalAxisOf(p: ExtPoint): boolean { return this.point.x === p.x(); }
     isOnSameHorizontalAxisOf(p: ExtPoint): boolean { return this.point.y === p.y(); }
+
 }

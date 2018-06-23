@@ -1,12 +1,10 @@
 import Graphics = Phaser.GameObjects.Graphics;
-import Rectangle = Phaser.Geom.Rectangle;
 import Point = Phaser.Geom.Point;
-import {Player} from "./player";
 import {ExtPoint} from "./ext-point";
 import {ExtPolygon} from "./ext-polygon";
 import Qix from "../scenes/qix";
 import {Grid} from "./grid";
-
+import {ExtRectangle} from "./ext-rectangle";
 
 export class FilledPolygons {
     static LINE_COLOR: integer = 0x0000;
@@ -25,7 +23,7 @@ export class FilledPolygons {
     }
 
     grid(): Grid { return this.qix.grid; }
-    frame(): Rectangle { return this.qix.grid.frame; }
+    frame(): ExtRectangle { return this.qix.grid.frame; }
     frameArea(): number { return this.qix.grid.frameArea; }
 
     /**
@@ -39,17 +37,17 @@ export class FilledPolygons {
         const firstPoint = points[0];
         const lastPoint = points[points.length - 1];
 
-        if (this.onFramePoint(firstPoint) && this.onFramePoint(lastPoint)) {
-            if (firstPoint.isLeftOf(lastPoint) && this.onLeftSideOfRectangle(firstPoint, this.frame())) {
+        if (this.frame().pointOnOutline(firstPoint.point) && this.frame().pointOnOutline(lastPoint.point)) {
+            if (firstPoint.isLeftOf(lastPoint) && this.frame().pointOnLeftSide(firstPoint.point)) {
                 polygonPoints.push(new Point(firstPoint.x(), lastPoint.y()));
             }
-            else if (firstPoint.isRightOf(lastPoint) && this.onLeftSideOfRectangle(lastPoint, this.frame())) {
+            else if (firstPoint.isRightOf(lastPoint) && this.frame().pointOnLeftSide(lastPoint.point)) {
                 polygonPoints.push(new Point(lastPoint.x(), firstPoint.y()));
             }
-            else if (firstPoint.isLeftOf(lastPoint) && this.onRightSideOfRectangle(lastPoint, this.frame())) {
+            else if (firstPoint.isLeftOf(lastPoint) && this.frame().pointOnRightSide(lastPoint.point)) {
                 polygonPoints.push(new Point(lastPoint.x(), firstPoint.y()));
             }
-            else if (firstPoint.isRightOf(lastPoint) && this.onRightSideOfRectangle(firstPoint, this.frame())) {
+            else if (firstPoint.isRightOf(lastPoint) && this.frame().pointOnRightSide(firstPoint.point)) {
                 polygonPoints.push(new Point(firstPoint.x(), lastPoint.y()));
             }
         }
@@ -73,17 +71,7 @@ export class FilledPolygons {
         );
     }
 
-    onFramePoint(point: ExtPoint): boolean {
-        const onFrame =
-            this.onTopSideOfRectangle(point, this.frame()) ||
-            this.onRightSideOfRectangle(point, this.frame()) ||
-            this.onBottomSideOfRectangle(point, this.frame()) ||
-            this.onLeftSideOfRectangle(point, this.frame());
-
-        return onFrame;
-    }
-
-    onPolygonLinePoint(point: ExtPoint): boolean {
+    pointOnLine(point: ExtPoint): boolean {
         for (let i = 0; i < this.polygons.length; i++) {
             if (this.polygons[i].outlineIntersects(point)) {
                 return true;
@@ -93,7 +81,7 @@ export class FilledPolygons {
         return false;
     }
 
-    withinAPolygon(point: ExtPoint): boolean {
+    pointWithinPolygon(point: ExtPoint): boolean {
         for (let i = 0; i < this.polygons.length; i++) {
             if (this.polygons[i].innerIntersects(point)) {
                 return true;
@@ -101,25 +89,6 @@ export class FilledPolygons {
         }
 
         return false;
-    }
-
-    onTopSideOfRectangle(point: ExtPoint, rectangle:Rectangle) { return Phaser.Geom.Intersects.PointToLine(point.point, rectangle.getLineA()) }
-    onRightSideOfRectangle(point: ExtPoint, rectangle:Rectangle) { return Phaser.Geom.Intersects.PointToLine(point.point, rectangle.getLineB()) }
-    onBottomSideOfRectangle(point: ExtPoint, rectangle:Rectangle) { return Phaser.Geom.Intersects.PointToLine(point.point, rectangle.getLineC()) }
-    onLeftSideOfRectangle(point: ExtPoint, rectangle:Rectangle) { return Phaser.Geom.Intersects.PointToLine(point.point, rectangle.getLineD()) }
-
-    isIllegalMove(player: Player, cursors: CursorKeys): boolean {
-        const newPosition = player.getMove(cursors);
-        newPosition.x += Player.RADIUS;
-        newPosition.y += Player.RADIUS;
-
-        const outOfBounds =
-            (newPosition.x < this.frame.x) ||
-            (newPosition.x > this.frame.x + this.frame.width) ||
-            (newPosition.y < this.frame.y) ||
-            (newPosition.y > this.frame.y + this.frame.height);
-
-        return outOfBounds || this.withinAPolygon(new ExtPoint(newPosition));
     }
 
 }
