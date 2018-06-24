@@ -41,21 +41,9 @@ class Qix extends Phaser.Scene {
 
         this.player.move(this.cursors);
         this.grid.update(this.player);
-    }
 
-    // updateDebug(time: number, delta: number) {
-    //     if (Qix.DEBUG) {
-    //         // const isOutOfBounds = this.grid.isOutOfBounds(this.player, this.cursors);
-    //         let lines: string[] = [];
-    //
-    //         lines = lines.concat(this.grid.debug());
-    //         lines.push(`time: ${Math.round(time)}`);
-    //         // lines.push(`isOutOfBounds: ${isOutOfBounds}`);
-    //         // lines.push(`onExistingGrid: ${this.grid.onExisting(this.player)}`);
-    //
-    //         this.info.updateDebugText(lines, delta);
-    //     }
-    // }
+        this.info.updateGameText();
+    }
 }
 
 export default Qix;

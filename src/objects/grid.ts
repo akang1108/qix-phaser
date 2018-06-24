@@ -8,7 +8,6 @@ import {FilledPolygons} from "./filled-polygons";
 import {ExtRectangle} from "./ext-rectangle";
 import {CurrentLines} from "./current-lines";
 
-
 export class Grid {
     static FRAME_MARGIN: integer = 10;
     static FRAME_HEIGHT: integer;
@@ -53,10 +52,6 @@ export class Grid {
             return;
         }
 
-        if (this.filledPolygons.pointWithinPolygon(player.point())) {
-            console.log('within a polygon');
-        }
-
         this.currentLines.updateLine(player);
 
         this.checkAndUpdateForClosedLoop(player);
@@ -68,8 +63,7 @@ export class Grid {
         const onExisting = this.onExistingLine(player);
 
         if (onExisting && player.previousOnExisting) {
-            this.currentLines.currentPolygonPoints = [];
-            this.currentLines.currentLine = null;
+            this.currentLines.reset();
             return true;
         } else {
             player.previousOnExisting = onExisting;
@@ -78,17 +72,11 @@ export class Grid {
     }
 
     checkAndUpdateForClosedLoop(player: Player): boolean {
-        const onExistingLine = this.onExistingLine(player);
-        return this.checkAndUpdateForClosedLoop2(player, onExistingLine);
-    }
+        const closedLoop = this.onExistingLine(player);
 
-    checkAndUpdateForClosedLoop2(player: Player, onExistingLine: boolean): boolean {
-        let closedLoop = false;
-
-        if (onExistingLine) {
-            closedLoop = true;
-            this.currentLines.currentPolygonPoints.push(player.point());
-            this.filledPolygons.drawFilledPolygon(this.currentLines.currentPolygonPoints);
+        if (closedLoop) {
+            this.currentLines.points.push(player.point());
+            this.filledPolygons.drawFilledPolygon(this.currentLines.points);
         }
 
         return closedLoop;

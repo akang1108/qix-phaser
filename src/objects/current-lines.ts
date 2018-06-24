@@ -1,62 +1,63 @@
 import Graphics = Phaser.GameObjects.Graphics;
-import Rectangle = Phaser.Geom.Rectangle;
 import Line = Phaser.Geom.Line;
-import {config} from "../main";
 import {Player} from "./player";
 import {ExtPoint} from "./ext-point";
 import Qix from "../scenes/qix";
-import {FilledPolygons} from "./filled-polygons";
-import {ExtRectangle} from "./ext-rectangle";
 import {Grid} from "./grid";
 
 
 export class CurrentLines {
     qix: Qix;
 
-    currentLineGraphics: Graphics;
-    currentPolygonPoints: ExtPoint[] = [];
-    currentLines: Line[] = [];
-    currentLine: Line;
-
-    grid(): Grid {
-        return this.qix.grid;
-    }
+    graphics: Graphics;
+    points: ExtPoint[] = [];
+    lines: Line[] = [];
+    line: Line;
 
     constructor(qix: Qix) {
         this.qix = qix;
 
-        this.currentLineGraphics = this.qix.add.graphics();
-        this.currentLineGraphics.lineStyle(1, Grid.LINE_COLOR);
-        this.currentLineGraphics.fillStyle(Grid.FILL_COLOR);
+        this.graphics = this.qix.add.graphics();
+        this.graphics.lineStyle(1, Grid.LINE_COLOR);
+        this.graphics.fillStyle(Grid.FILL_COLOR);
+    }
+
+    grid(): Grid { return this.qix.grid; }
+
+    reset() {
+        this.graphics.clear();
+        this.points = [];
+        this.lines = [];
+        this.line = null;
     }
 
     updateLine(player: Player) {
         // Create new line
-        if (! this.currentLine) {
+        if (! this.line) {
             this.createCurrentLine(player);
         }
         // Moving along existing line
-        else if (this.isHorizontal(this.currentLine) && player.movingLeft()) {
-            this.currentLine.x1 = player.x();
-        } else if (this.isHorizontal(this.currentLine) && player.movingRight()) {
-            this.currentLine.x2 = player.x();
-        } else if (this.isVertical(this.currentLine) && player.movingUp()) {
-            this.currentLine.y1 = player.y();
-        } else if (this.isVertical(this.currentLine) && player.movingDown()) {
-            this.currentLine.y2 = player.y();
+        else if (this.isHorizontal(this.line) && player.movingLeft()) {
+            this.line.x1 = player.x();
+        } else if (this.isHorizontal(this.line) && player.movingRight()) {
+            this.line.x2 = player.x();
+        } else if (this.isVertical(this.line) && player.movingUp()) {
+            this.line.y1 = player.y();
+        } else if (this.isVertical(this.line) && player.movingDown()) {
+            this.line.y2 = player.y();
         }
-        // Switching directions
+        // 90 degree turn
         else {
-            this.currentLines.push(this.currentLine);
+            this.lines.push(this.line);
             this.createCurrentLine(player);
         }
 
-        this.currentLineGraphics.strokeLineShape(this.currentLine);
+        this.graphics.strokeLineShape(this.line);
     }
 
     createCurrentLine(player: Player) {
-        this.currentPolygonPoints.push(player.previousPoint);
-        this.currentLine = new Line(
+        this.points.push(player.previousPoint);
+        this.line = new Line(
             player.previousPoint.x(),
             player.previousPoint.y(),
             player.x(),

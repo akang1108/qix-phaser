@@ -1,7 +1,6 @@
 import Qix from "../scenes/qix";
 import {StringUtils} from "../utils/string-utils";
 import {config} from "../main";
-import {Grid} from "./grid";
 
 export class Debug {
 
@@ -18,45 +17,34 @@ export class Debug {
             return
         }
 
-        // const isOutOfBounds = this.grid.isOutOfBounds(this.player, this.cursors);
-        let lines: string[] = [];
-
-        lines = lines.concat(this.debugGrid(this.qix.grid));
-        lines.push(`time: ${Math.round(time)}`);
-        // lines.push(`isOutOfBounds: ${isOutOfBounds}`);
-        // lines.push(`onExistingGrid: ${this.grid.onExisting(this.player)}`);
+        let lines: string[] = this.debug(this.qix);
 
         this.qix.info.updateDebugText(lines, delta);
     }
 
-    debugGrid(grid: Grid) {
-        const col1 = 10, col2 = 20, col3 = 10, col4 = 20;
+    debug(qix: Qix): string[] {
+        const cols = [15, 40, 15, 40];
 
-        let lines: string[] = [];
+        const player = qix.player;
+        const grid = qix.grid;
+        const frame = qix.grid.frame;
+        const info = qix.info;
 
-        lines.push(
-            StringUtils.padRight(`scene:`, col1) +
-            StringUtils.padRight(`[${config.width},${config.height}]`, col2) +
-            StringUtils.padRight(`frame:`, col3) +
-            StringUtils.padRight(`[${grid.frame.x},${grid.frame.y},${grid.frame.width + grid.frame.x},${grid.frame.height + grid.frame.y}]`, col4)
-        );
+        let data: string[] = [];
 
-        // let polygonsStr: string = StringUtils.padRight(`polygons:`, col1);
-        //
-        // polygonsStr += grid.polygons.map((polygon) => {
-        //     return `[area:${polygon.percentArea}% pts:` +
-        //         polygon.polygon.points.map((point) => {
-        //             return `[${point.x},${point.y}]`
-        //         }).join(',') +
-        //     `] `;
-        // }).join(' ');
-        //
-        // polygonsStr = StringUtils.wrap(polygonsStr, 100);
-        //
-        // lines.push(
-        //     polygonsStr
-        // );
+        data.push(`scene:`);
+        data.push(`w[${config.width}] h[${config.height}]`);
+        data.push(`frame:`);
+        data.push(`pt[${frame.x()},${frame.y()}]  w[${frame.width()}] h[${frame.height()}]`);
+        data.push(`info:`);
+        data.push(`pt[${info.x()},${info.y()}]  w[${info.width()}] h[${info.height()}]`);
+        data.push(`on existing:`);
+        data.push(`${grid.onExistingLine(player)}`);
+        data.push(`on frame:`);
+        data.push(`${frame.pointOnOutline(player.point().point)}`);
+        data.push(`on polygon:`);
+        data.push(`${grid.filledPolygons.pointOnLine(player.point())}`);
 
-        return lines;
+        return StringUtils.dataToLines(cols, data);
     }
 }

@@ -11,6 +11,11 @@ export class ExtRectangle {
         this.rectangle = r;
     }
 
+    x(): number { return this.rectangle.x; }
+    y(): number { return this.rectangle.y; }
+    width(): number { return this.rectangle.width; }
+    height(): number { return this.rectangle.height; }
+
     pointOnTopSide(point: Point): boolean {
         return Phaser.Geom.Intersects.PointToLine(point, this.rectangle.getLineA())
     }

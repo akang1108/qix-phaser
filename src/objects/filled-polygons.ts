@@ -26,6 +26,16 @@ export class FilledPolygons {
     frame(): ExtRectangle { return this.qix.grid.frame; }
     frameArea(): number { return this.qix.grid.frameArea; }
 
+    percentArea(): number {
+        return this.polygons.reduce((total, currentPolygon) => {
+            return total + currentPolygon.percentArea;
+        }, 0);
+    }
+
+    percentAreaString(): string {
+        return this.percentArea().toFixed(1);
+    }
+
     /**
      * Based on frame and existing polygon lines, need to fill out rest of the polygon points
      *
@@ -55,14 +65,14 @@ export class FilledPolygons {
         const polygon: ExtPolygon = new ExtPolygon(polygonPoints, this.frameArea());
         polygon.draw(this);
         this.polygons.push(polygon);
-        //this.logPolygons();
+        this.logPolygons();
     }
 
     logPolygons(): void {
         console.table(
             this.polygons.map((polygon) => {
                 let obj: any = {};
-                obj.percentArea = `${polygon.percentArea}%`;
+                obj.percentAreaString = `${polygon.percentAreaString}%`;
                 polygon.polygon.points.forEach((point, index) => {
                     obj[`pt${index}`] = `${point.x},${point.y}`;
                 });

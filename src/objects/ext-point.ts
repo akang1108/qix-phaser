@@ -17,7 +17,7 @@ export class ExtPoint {
     x(): number { return this.point.x; }
     y(): number { return this.point.y; }
 
-    public isLeftOf(p: ExtPoint): boolean { return this.x() < p.x(); }
+    isLeftOf(p: ExtPoint): boolean { return this.x() < p.x(); }
     isRightOf(p: ExtPoint): boolean { return this.x() > p.x(); }
     isAboveOf(p: ExtPoint): boolean { return this.y() < p.y(); }
     isBelowOf(p: ExtPoint): boolean { return this.y() > p.y(); }

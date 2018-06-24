@@ -18,4 +18,28 @@ export class StringUtils {
         str += s;
         return str;
     }
+
+    static dataToLines(cols: integer[], data: string[]): string[] {
+        let lines: string[] = [];
+        let line = '';
+        let colIndex = 0;
+        let numCols = cols.length;
+
+        data.forEach((d) => {
+            line += StringUtils.padRight(d, cols[colIndex]);
+            if (colIndex + 1 === numCols) {
+                lines.push(line);
+                line = '';
+                colIndex = 0;
+            } else {
+                colIndex++;
+            }
+        });
+
+        if (line !== '') {
+            lines.push(line);
+        }
+
+        return lines;
+    }
 }

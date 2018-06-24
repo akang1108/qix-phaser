@@ -10,14 +10,15 @@ import {FilledPolygons} from "./filled-polygons";
  * Point with additional helper methods. Decorates existing Phaser Point class.
  */
 export class ExtPolygon {
-    percentArea: string;
+    percentArea: number;
+    percentAreaString: string;
     polygon: Polygon;
     lines: Line[] = [];
 
     constructor(points: Point[], frameArea: number) {
         this.polygon = this.createPolygon(points);
         this.lines = this.createLines(points);
-        this.percentArea = this.calculatePercentArea(this.polygon, frameArea);
+        this.calculateAndSetPercentArea(this.polygon, frameArea);
     }
 
     createPolygon(points: Point[]): Polygon {
@@ -36,8 +37,9 @@ export class ExtPolygon {
         return lines;
     }
 
-    calculatePercentArea(polygon: Polygon, frameArea: number): string {
-        return ((Math.abs(this.polygon.area) / frameArea) * 100).toFixed(1);
+    calculateAndSetPercentArea(polygon: Polygon, frameArea: number): void {
+        this.percentArea = Math.abs(this.polygon.area) / frameArea * 100;
+        this.percentAreaString = this.percentArea.toFixed(1);
     }
 
     draw(filledPolygons: FilledPolygons) {
