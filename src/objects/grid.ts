@@ -7,17 +7,20 @@ import Qix from "../scenes/qix";
 import {FilledPolygons} from "./filled-polygons";
 import {ExtRectangle} from "./ext-rectangle";
 import {CurrentLines} from "./current-lines";
+import {AllPoints} from "./all-points";
+import Polygon = Phaser.Geom.Polygon;
 
 export class Grid {
     static FRAME_MARGIN: integer = 10;
     static FRAME_HEIGHT: integer;
-    static LINE_COLOR: integer = 0x0000;
+    static LINE_COLOR: integer = 0x000;
     static FILL_COLOR: integer = 0xCCAAFF;
     static FRAME_HEIGHT_PERCENT: number = .7;
 
     qix: Qix;
     filledPolygons: FilledPolygons;
     currentLines: CurrentLines;
+    allPoints: AllPoints;
 
     frameGraphics: Graphics;
     frame: ExtRectangle;
@@ -27,9 +30,14 @@ export class Grid {
         this.qix = qix;
         this.filledPolygons = new FilledPolygons(qix);
         this.currentLines = new CurrentLines(qix);
+        this.createFrame();
 
+        this.allPoints = new AllPoints(this.qix, this.frame.rectangle);
+    }
+
+    createFrame(): void {
         Grid.FRAME_HEIGHT = Math.round(config.height as number * Grid.FRAME_HEIGHT_PERCENT);
-        this.frameGraphics = qix.add.graphics();
+        this.frameGraphics = this.qix.add.graphics();
         this.frameGraphics.lineStyle(1, Grid.LINE_COLOR);
         this.frameGraphics.fillStyle(Grid.FILL_COLOR);
 
@@ -76,10 +84,18 @@ export class Grid {
 
         if (closedLoop) {
             this.currentLines.points.push(player.point());
-            this.filledPolygons.drawFilledPolygon(this.currentLines.points);
+
+            const extrapolatedPoints = this.extrapolatePoints(this.currentLines.points);
+            this.filledPolygons.drawFilledPolygon(extrapolatedPoints);
+
+            this.currentLines.reset();
         }
 
         return closedLoop;
+    }
+
+    extrapolatePoints(points: ExtPoint[]): ExtPoint[] {
+        return this.allPoints.extrapolatePointsAndUpdateInnerPolygon(points);
     }
 
     onExistingLine(player: Player): boolean {

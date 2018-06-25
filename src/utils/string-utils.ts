@@ -1,3 +1,5 @@
+import Line = Phaser.Geom.Line;
+
 export class StringUtils {
     static padRight(s: string, n: number, p: string = ' '): string {
         let ps: string = '';
@@ -7,6 +9,10 @@ export class StringUtils {
 
         ps = s + ps;
         return ps.slice(0, n);
+    }
+
+    static prettyLine(l: Line): string {
+        return `[${l.x1},${l.y1}],[${l.x2},${l.y2}]`;
     }
 
     static wrap(s: string, n: number): string {

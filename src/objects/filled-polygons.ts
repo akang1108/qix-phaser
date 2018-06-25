@@ -44,28 +44,28 @@ export class FilledPolygons {
     drawFilledPolygon(points: ExtPoint[]) {
         let polygonPoints: Point[] = points.map((p) => p.point);
 
-        const firstPoint = points[0];
-        const lastPoint = points[points.length - 1];
-
-        if (this.frame().pointOnOutline(firstPoint.point) && this.frame().pointOnOutline(lastPoint.point)) {
-            if (firstPoint.isLeftOf(lastPoint) && this.frame().pointOnLeftSide(firstPoint.point)) {
-                polygonPoints.push(new Point(firstPoint.x(), lastPoint.y()));
-            }
-            else if (firstPoint.isRightOf(lastPoint) && this.frame().pointOnLeftSide(lastPoint.point)) {
-                polygonPoints.push(new Point(lastPoint.x(), firstPoint.y()));
-            }
-            else if (firstPoint.isLeftOf(lastPoint) && this.frame().pointOnRightSide(lastPoint.point)) {
-                polygonPoints.push(new Point(lastPoint.x(), firstPoint.y()));
-            }
-            else if (firstPoint.isRightOf(lastPoint) && this.frame().pointOnRightSide(firstPoint.point)) {
-                polygonPoints.push(new Point(firstPoint.x(), lastPoint.y()));
-            }
-        }
+        // const firstPoint = points[0];
+        // const lastPoint = points[points.length - 1];
+        //
+        // if (this.frame().pointOnOutline(firstPoint.point) && this.frame().pointOnOutline(lastPoint.point)) {
+        //     if (firstPoint.isLeftOf(lastPoint) && this.frame().pointOnLeftSide(firstPoint.point)) {
+        //         polygonPoints.push(new Point(firstPoint.x(), lastPoint.y()));
+        //     }
+        //     else if (firstPoint.isRightOf(lastPoint) && this.frame().pointOnLeftSide(lastPoint.point)) {
+        //         polygonPoints.push(new Point(lastPoint.x(), firstPoint.y()));
+        //     }
+        //     else if (firstPoint.isLeftOf(lastPoint) && this.frame().pointOnRightSide(lastPoint.point)) {
+        //         polygonPoints.push(new Point(lastPoint.x(), firstPoint.y()));
+        //     }
+        //     else if (firstPoint.isRightOf(lastPoint) && this.frame().pointOnRightSide(firstPoint.point)) {
+        //         polygonPoints.push(new Point(firstPoint.x(), lastPoint.y()));
+        //     }
+        // }
 
         const polygon: ExtPolygon = new ExtPolygon(polygonPoints, this.frameArea());
         polygon.draw(this);
         this.polygons.push(polygon);
-        this.logPolygons();
+        // this.logPolygons();
     }
 
     logPolygons(): void {
