@@ -1,28 +1,152 @@
 import Rectangle = Phaser.Geom.Rectangle;
 import Point = Phaser.Geom.Point;
-import Line = Phaser.Geom.Line;
-import Polygon = Phaser.Geom.Polygon;
 import {ExtPoint} from "./ext-point";
-import {GeomUtils} from "../utils/geom-utils";
 import Qix from "../scenes/qix";
-import {Debug} from "./debug";
+import Polygon = Phaser.Geom.Polygon;
+import Line = Phaser.Geom.Line;
+import {GeomUtils} from "../utils/geom-utils";
 
 export class AllPoints {
     qix: Qix;
-
-    points: ExtPoint[];
-    innerPolygonClockwiseLines: Line[];
+    innerPolygonPointsClockwise: ExtPoint[];
 
     constructor(qix: Qix, rectangle: Rectangle) {
         this.qix = qix;
-        this.points = [];
-        this.innerPolygonClockwiseLines = GeomUtils.createLinesFromPoints(this.getClockwiseRectanglePoints(rectangle));
+        this.innerPolygonPointsClockwise = this.getClockwiseRectanglePoints(rectangle);
     }
 
-    addPoints(points: ExtPoint[]) {
-        this.points.concat(points);
+    calculateNewPolygonPoints(points: ExtPoint[]): ExtPoint[] {
+        const clockwisePoints = this.calculateNewPolygonPointsNormal(points);
+        const counterClockwisePoints = this.calculateNewPolygonPointsInverse(points);
+
+        const clockwisePolygon = new Polygon(clockwisePoints.map(point => point.point));
+        const counterClockwisePolygon = new Polygon(counterClockwisePoints.map(point => point.point));
+
+        // Current algorithm - pick smaller area
+        const clockwise = Math.abs(clockwisePolygon.area) <= Math.abs(counterClockwisePolygon.area);
+
+        return clockwise ? clockwisePoints : counterClockwisePoints;
     }
 
+    calculateNewPolygonPointsNormal(points: ExtPoint[]): ExtPoint[] {
+        return this.calculateNewPolygonPointsWithInnerPoints(points, this.innerPolygonPointsClockwise.slice(), false);
+    }
+
+    calculateNewPolygonPointsInverse(points: ExtPoint[]): ExtPoint[] {
+        return this.calculateNewPolygonPointsWithInnerPoints(points.slice(), this.innerPolygonPointsClockwise.slice(), true);
+    }
+
+    calculateNewPolygonPointsWithInnerPoints(points: ExtPoint[], innerPoints: ExtPoint[], inverse: boolean = false): ExtPoint[] {
+        const reorderedPoints = this.reorderPoints(points, innerPoints);
+        const first = reorderedPoints[0];
+        const last = reorderedPoints[reorderedPoints.length - 1];
+        let passedFirstPoint: boolean = false;
+        let passedLastPoint: boolean = false;
+        let polygonPoints: ExtPoint[] = [];
+
+        for (let i = 0; i < innerPoints.length - 1; i++) {
+            if (! inverse && (! passedFirstPoint || (passedFirstPoint && passedLastPoint))) {
+                polygonPoints.push(innerPoints[i]);
+            } else if (inverse && passedFirstPoint && ! passedLastPoint) {
+                polygonPoints.push(innerPoints[i]);
+            }
+
+            if (first.isBetweenTwoPointsInclusive(innerPoints[i], innerPoints[i + 1])) {
+                passedFirstPoint = true;
+
+                if (! inverse) {
+                    polygonPoints = polygonPoints.concat(reorderedPoints);
+                } else {
+                    polygonPoints.push(first);
+                }
+            }
+
+            if (last.isBetweenTwoPointsInclusive(innerPoints[i], innerPoints[i + 1])) {
+                passedLastPoint = true;
+            }
+        }
+
+        if (! inverse) {
+            polygonPoints.push(innerPoints[innerPoints.length - 1]);
+        } else {
+            polygonPoints = polygonPoints.concat(reorderedPoints.slice().reverse());
+        }
+
+        return polygonPoints;
+    }
+
+    calculateNewInnerPoints(newPolygonPoints: ExtPoint[], innerPoints: ExtPoint[]): ExtPoint[] {
+        const newInnerPoints: ExtPoint[] = [];
+        let contains = false;
+        let newPolygonPointsIndex = 0;
+
+        for (let innerPointsIndex = 0; innerPointsIndex < innerPoints.length - 1; innerPointsIndex++) {
+            let innerPoint1 = innerPoints[innerPointsIndex];
+            let innerPoint2 = innerPoints[innerPointsIndex + 1];
+            let innerLine = new Line(innerPoint1.x(), innerPoint1.y(), innerPoint2.x(), innerPoint2.y());
+
+            for (newPolygonPointsIndex = 0; newPolygonPointsIndex < newPolygonPoints.length - 1; newPolygonPointsIndex++) {
+                let newPolygonPoint1 = newPolygonPoints[newPolygonPointsIndex];
+                let newPolygonPoint2 = newPolygonPoints[newPolygonPointsIndex + 1];
+                let newPolygonLine = new Line(newPolygonPoint1.x(), newPolygonPoint1.y(), newPolygonPoint2.x(), newPolygonPoint2.y());
+                if (GeomUtils.lineContainsLine(innerLine, newPolygonLine)) {
+                    contains = true;
+                    break;
+                }
+            }
+
+            if (! contains) {
+                newInnerPoints.push(innerPoint1);
+            }
+        }
+
+
+        return newInnerPoints;
+    }
+
+    xcalculateNewInnerPoints(points: ExtPoint[], innerPoints: ExtPoint[]): ExtPoint[] {
+        return[];
+    }
+
+    /**
+     * Return new array of points to follow same order (clockwise or counterclockwise) of inner polygon points
+     *
+     * @param {ExtPoint[]} points
+     * @returns {ExtPoint[]}
+     */
+    reorderPoints(points: ExtPoint[], innerPoints: ExtPoint[]) {
+        points = points.slice();
+        const first = points[0];
+        const last = points[points.length - 1];
+        let firstIndex: integer, lastIndex: integer;
+
+        for (let i = 0; i < innerPoints.length - 1; i++) {
+            if (first.isBetweenTwoPointsInclusive(innerPoints[i], innerPoints[i + 1])) {
+                firstIndex = i;
+            }
+
+            if (last.isBetweenTwoPointsInclusive(innerPoints[i], innerPoints[i + 1])) {
+                lastIndex = i;
+            }
+        }
+
+        if (lastIndex < firstIndex) {
+            points.reverse();
+        } else if (lastIndex == firstIndex && first.isAfter(last, innerPoints[firstIndex], innerPoints[firstIndex + 1])) {
+            points.reverse();
+        }
+
+        return points;
+    }
+
+
+    updateInnerPolygon(): void {
+
+    }
+
+
+
+    /*
     extrapolatePointsAndUpdateInnerPolygon(points: ExtPoint[]): ExtPoint[] {
         const clockwisePoints = this.extrapolatePoints(points, true, false);
         const counterClockwisePoints = this.extrapolatePoints(points, false, false);
@@ -158,6 +282,7 @@ export class AllPoints {
             return i + 1;
         }
     }
+    */
 
     private getClockwiseRectanglePoints(rectangle: Rectangle): ExtPoint[] {
         let points: ExtPoint[] = [];
@@ -165,6 +290,7 @@ export class AllPoints {
         points.push(new ExtPoint(new Point(rectangle.right, rectangle.top)));
         points.push(new ExtPoint(new Point(rectangle.right, rectangle.bottom)));
         points.push(new ExtPoint(new Point(rectangle.left, rectangle.bottom)));
+        points.push(new ExtPoint(new Point(rectangle.left, rectangle.top)));
         return points;
     }
 }

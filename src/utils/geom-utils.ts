@@ -1,5 +1,6 @@
 import {ExtPoint} from "../objects/ext-point";
 import Line = Phaser.Geom.Line;
+import Point = Phaser.Geom.Point;
 
 export class GeomUtils {
 
@@ -35,6 +36,14 @@ export class GeomUtils {
         lines.push(new Line(points[points.length - 1].x(), points[points.length - 1].y(), points[0].x(), points[0].y()));
 
         return lines;
+    }
+
+    static lineContainsLine(line1: Line, line2: Line): boolean {
+        const line2Point1 = new Point(line2.x1, line2.y1);
+        const line2Point2 = new Point(line2.x1, line2.y2);
+
+        return Phaser.Geom.Intersects.PointToLineSegment(line2Point1, line1) &&
+               Phaser.Geom.Intersects.PointToLineSegment(line2Point2, line1);
     }
 
 }

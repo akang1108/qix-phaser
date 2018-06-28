@@ -8,7 +8,6 @@ import {FilledPolygons} from "./filled-polygons";
 import {ExtRectangle} from "./ext-rectangle";
 import {CurrentLines} from "./current-lines";
 import {AllPoints} from "./all-points";
-import Polygon = Phaser.Geom.Polygon;
 
 export class Grid {
     static FRAME_MARGIN: integer = 10;
@@ -85,17 +84,13 @@ export class Grid {
         if (closedLoop) {
             this.currentLines.points.push(player.point());
 
-            const extrapolatedPoints = this.extrapolatePoints(this.currentLines.points);
-            this.filledPolygons.drawFilledPolygon(extrapolatedPoints);
+            const points = this.allPoints.calculateNewPolygonPoints(this.currentLines.points);
+            this.filledPolygons.drawFilledPolygon(points);
 
             this.currentLines.reset();
         }
 
         return closedLoop;
-    }
-
-    extrapolatePoints(points: ExtPoint[]): ExtPoint[] {
-        return this.allPoints.extrapolatePointsAndUpdateInnerPolygon(points);
     }
 
     onExistingLine(player: Player): boolean {
