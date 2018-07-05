@@ -41,4 +41,8 @@ export class ExtPoint {
                isGoingDown &&  this.y() > point.y();
     }
 
+    equals(p: ExtPoint): boolean {
+        return (this.x() === p.x() && this.y() === p.y());
+    }
+
 }

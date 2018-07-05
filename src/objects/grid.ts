@@ -84,8 +84,9 @@ export class Grid {
         if (closedLoop) {
             this.currentLines.points.push(player.point());
 
-            const points = this.allPoints.calculateNewPolygonPoints(this.currentLines.points);
-            this.filledPolygons.drawFilledPolygon(points);
+            const newPolygonPoints = this.allPoints.calculateNewPolygonPoints(this.currentLines.points);
+            this.filledPolygons.drawFilledPolygon(newPolygonPoints);
+            this.allPoints.updateNewInnerPoints(newPolygonPoints);
 
             this.currentLines.reset();
         }
