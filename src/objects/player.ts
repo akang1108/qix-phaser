@@ -16,7 +16,7 @@ export class Player {
 
     speed: integer;
 
-    constructor(scene: Scene, x: integer, y: integer, speed: integer = 5) {
+    constructor(scene: Scene, x: integer, y: integer, speed: integer = 2) {
         this.speed = speed;
         this.graphics = scene.add.graphics();
         this.graphics.lineStyle(1, Player.COLOR);

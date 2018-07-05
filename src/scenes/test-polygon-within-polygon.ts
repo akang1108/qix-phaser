@@ -38,7 +38,7 @@ export class TestPolygonWithinPolygon extends Phaser.Scene {
         this.graphics.lineStyle(1, Grid.LINE_COLOR);
         this.graphics.fillStyle(Grid.FILL_COLOR);
 
-        this.player = new Player(this, 300, 300, 5);
+        this.player = new Player(this, 300, 300);
     }
 
     update(time: number, delta: number) {

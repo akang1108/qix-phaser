@@ -6,8 +6,8 @@ import {TestPolygonWithinPolygon} from "./scenes/test-polygon-within-polygon";
 export const config:GameConfig = {
     type: Phaser.AUTO,
     parent: 'content',
-    width: 800,
-    height: 600,
+    width: 300,
+    height: 200,
     resolution: 1,
     backgroundColor: "#555",
     scene: [

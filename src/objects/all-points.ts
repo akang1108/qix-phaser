@@ -24,6 +24,7 @@ export class AllPoints {
         // Current algorithm - pick smaller area
         // TODO: when enemy added, choose area that enemy is not in...
         const clockwise = Math.abs(clockwisePolygon.area) <= Math.abs(counterClockwisePolygon.area);
+        console.info(clockwise);
 
         return clockwise ? clockwisePoints : counterClockwisePoints;
     }
@@ -37,7 +38,12 @@ export class AllPoints {
     }
 
     calculateNewPolygonPointsWithInnerPoints(points: ExtPoint[], innerPoints: ExtPoint[], inverse: boolean = false): ExtPoint[] {
+        // console.info(`inverse:${inverse}`);
+
         const reorderedPoints = this.reorderPoints(points, innerPoints);
+
+        if (!inverse) reorderedPoints.forEach((point) => console.info(point.point));
+
         const first = reorderedPoints[0];
         const last = reorderedPoints[reorderedPoints.length - 1];
         let passedFirstPoint: boolean = false;
@@ -71,6 +77,8 @@ export class AllPoints {
         } else {
             polygonPoints = polygonPoints.concat(reorderedPoints.slice().reverse());
         }
+
+        //polygonPoints.forEach((point) => console.info(point.point));
 
         return polygonPoints;
     }
@@ -151,13 +159,14 @@ export class AllPoints {
         }
 
         newInnerLines.splice(innerInjectIndex, 0, ...injectInnerLines);
-
-        newInnerLines.forEach((line) => {console.info(line); } );
-        console.info(`innerInjectIndex:${innerInjectIndex}`);
-
         this.innerPolygonPointsClockwise = this.getPolygonPointsFromLines(newInnerLines);
-        console.info(`innerPolygonPointsClockwise:`);
-        this.innerPolygonPointsClockwise.forEach((point) => {console.info(point.point)});
+
+        // newInnerLines.forEach((line) => {console.info(line); } );
+        // console.info(`innerInjectIndex:${innerInjectIndex}`);
+
+
+        // console.info(`innerPolygonPointsClockwise:`);
+        // this.innerPolygonPointsClockwise.forEach((point) => {console.info(point.point)});
     }
 
     reverseLine(line: Line): Line {

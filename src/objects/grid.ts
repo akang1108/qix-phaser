@@ -85,8 +85,35 @@ export class Grid {
             this.currentLines.points.push(player.point());
 
             const newPolygonPoints = this.allPoints.calculateNewPolygonPoints(this.currentLines.points);
+
+            // console.info('newPolygonPoints');
+            // newPolygonPoints.forEach((point) => console.info(point.point));
+
+            const totalTime = 2000, buffer = 300;
+            const currentTime = Date.now();
+            const endTime = currentTime + totalTime;
+
+            const drawPointFunc = ((index: string) => {
+                const point = newPolygonPoints[parseInt(index)];
+                const g = this.qix.add.graphics();
+                const destroyTime = endTime - Date.now();
+                // console.info('destroyTime', destroyTime, 'point', point.point);
+                g.lineStyle(1, 0x33AA55).strokeCircle(point.x(), point.y(), 3);
+                setTimeout(() => { g.destroy(); }, destroyTime);
+            });
+
+            for (let i in newPolygonPoints) {
+                const time = buffer * Number(i);
+                setTimeout(() => {
+                    drawPointFunc(i);
+                }, time);
+            }
+
             this.filledPolygons.drawFilledPolygon(newPolygonPoints);
             this.allPoints.updateNewInnerPoints(newPolygonPoints);
+
+            console.info('innerPolygonPointsClockwise');
+            this.allPoints.innerPolygonPointsClockwise.forEach((point) => console.info(point.point));
 
             this.currentLines.reset();
         }
