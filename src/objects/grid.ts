@@ -86,8 +86,8 @@ export class Grid {
 
             const newPolygonPoints = this.allPoints.calculateNewPolygonPoints(this.currentLines.points);
 
-            // console.info('newPolygonPoints');
-            // newPolygonPoints.forEach((point) => console.info(point.point));
+            console.info('newPolygonPoints');
+            newPolygonPoints.forEach((point) => console.info(point.point));
 
             const totalTime = 2000, buffer = 300;
             const currentTime = Date.now();

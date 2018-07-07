@@ -42,7 +42,10 @@ export class AllPoints {
 
         const reorderedPoints = this.reorderPoints(points, innerPoints);
 
-        if (!inverse) reorderedPoints.forEach((point) => console.info(point.point));
+        if (!inverse) {
+            console.info(`reorderdPoints`);
+            reorderedPoints.forEach((point) => console.info(point.point));
+        }
 
         const first = reorderedPoints[0];
         const last = reorderedPoints[reorderedPoints.length - 1];
