@@ -1,6 +1,8 @@
 import Qix from "../scenes/qix";
 import {StringUtils} from "../utils/string-utils";
 import {config} from "../main";
+import {ExtPoint} from "./ext-point";
+import Line = Phaser.Geom.Line;
 
 export class Debug {
 
@@ -46,5 +48,41 @@ export class Debug {
         data.push(`${grid.filledPolygons.pointOnLine(player.point())}`);
 
         return StringUtils.dataToLines(cols, data);
+    }
+
+    debugHighlightPoints(points: ExtPoint[], radius = 3, fill = true, buffer = 500, destroyTime = 1200, color = 0x33AA55): void {
+        const drawPointFunc = ((index: string) => {
+            const point = points[parseInt(index)];
+            const g = this.qix.add.graphics();
+            g.lineStyle(1, color);
+            g.fillStyle(color);
+            if (fill) {
+                g.fillCircle(point.x(), point.y(), radius);
+            } else {
+                g.strokeCircle(point.x(), point.y(), radius);
+            }
+            setTimeout(() => { g.destroy(); }, destroyTime);
+        });
+
+        for (let i in points) {
+            const time = buffer * Number(i);
+            setTimeout(() => {
+                drawPointFunc(i);
+            }, time);
+        }
+    }
+
+    debugConsolePoints(text: string, points: ExtPoint[]): void {
+        console.group();
+        console.info(text);
+        console.table(points.map((pt) => pt.point));
+        console.groupEnd();
+    }
+
+    debugConsoleLines(text: string, lines: Line[]): void {
+        console.group();
+        console.info(text);
+        console.table(lines);
+        console.groupEnd();
     }
 }

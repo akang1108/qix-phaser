@@ -78,50 +78,39 @@ export class Grid {
         }
     }
 
-    checkAndUpdateForClosedLoop(player: Player): boolean {
-        const closedLoop = this.onExistingLine(player);
-
-        if (closedLoop) {
-            this.currentLines.points.push(player.point());
-
-            const newPolygonPoints = this.allPoints.calculateNewPolygonPoints(this.currentLines.points);
-
-            console.info('newPolygonPoints');
-            newPolygonPoints.forEach((point) => console.info(point.point));
-
-            const totalTime = 2000, buffer = 300;
-            const currentTime = Date.now();
-            const endTime = currentTime + totalTime;
-
-            const drawPointFunc = ((index: string) => {
-                const point = newPolygonPoints[parseInt(index)];
-                const g = this.qix.add.graphics();
-                const destroyTime = endTime - Date.now();
-                // console.info('destroyTime', destroyTime, 'point', point.point);
-                g.lineStyle(1, 0x33AA55).strokeCircle(point.x(), point.y(), 3);
-                setTimeout(() => { g.destroy(); }, destroyTime);
-            });
-
-            for (let i in newPolygonPoints) {
-                const time = buffer * Number(i);
-                setTimeout(() => {
-                    drawPointFunc(i);
-                }, time);
-            }
-
-            this.filledPolygons.drawFilledPolygon(newPolygonPoints);
-            this.allPoints.updateNewInnerPoints(newPolygonPoints);
-
-            console.info('innerPolygonPointsClockwise');
-            this.allPoints.innerPolygonPointsClockwise.forEach((point) => console.info(point.point));
-
-            this.currentLines.reset();
+    checkAndUpdateForClosedLoop(player: Player): void {
+        // Check for closed loop
+        if (! this.onExistingLine(player)) {
+            return;
         }
 
-        return closedLoop;
+        this.currentLines.points.push(player.point());
+        const points = this.currentLines.points;
+
+        // Check for not enough points or circular loop
+        if (points.length < 2 || points[0].equals(points[points.length - 1])) {
+            this.currentLines.reset();
+            return;
+        }
+
+        const newPolygonPoints = this.allPoints.calculateNewClockwisePolygonPoints(this.currentLines.points);
+        this.filledPolygons.drawFilledPolygon(newPolygonPoints);
+        this.allPoints.updateNewInnerPoints(newPolygonPoints);
+
+        this.qix.debug.debugHighlightPoints(newPolygonPoints, 3, true, 300, 700);
+        // this.qix.debug.debugHighlightPoints(this.allPoints.innerPolygonPointsClockwise, 4, true, 300, 700, 0xBB22AA);
+        // this.qix.debug.debugConsolePoints('points', this.currentLines.points);
+        // this.qix.debug.debugConsolePoints('newPolygonPoints', newPolygonPoints);
+        // this.qix.debug.debugConsolePoints('innerPolygonPointsClockwise', this.allPoints.innerPolygonPointsClockwise);
+
+        this.currentLines.reset();
     }
 
     onExistingLine(player: Player): boolean {
+        return this.frame.pointOnOutline(player.point().point) || this.filledPolygons.pointOnLine(player.point());
+    }
+
+    firstPointAndLastPointSame(player: Player): boolean {
         return this.frame.pointOnOutline(player.point().point) || this.filledPolygons.pointOnLine(player.point());
     }
 
