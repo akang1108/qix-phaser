@@ -23,7 +23,10 @@ export class AllPoints {
 
         // TODO: when enemy added, choose area that enemy is not in...
         const smallerAreaPoints = Math.abs(newPolygon.area) <= Math.abs(newInversePolygon.area) ? newPoints : newInversePoints;
-        const newClockwisePoints = GeomUtils.makeClockwisePoints(smallerAreaPoints);
+        let newClockwisePoints = GeomUtils.makeClockwisePoints(smallerAreaPoints);
+
+        // Remove the last point which is the repeated first point
+        newClockwisePoints.splice(newClockwisePoints.length - 1, 1);
 
         return newClockwisePoints;
     }
@@ -43,14 +46,12 @@ export class AllPoints {
      * @param {ExtPoint[]} points
      * @param {ExtPoint[]} innerPoints
      * @param {boolean} inverse
-     * @returns {ExtPoint[]}
+     * @returns {ExtPoint[]} - the last point is not a repeat of the first point
      */
     calculateNewPolygonPointsWithInnerPoints(points: ExtPoint[], innerPoints: ExtPoint[], inverse: boolean = false): ExtPoint[] {
         if (inverse) {
             points = points.reverse();
         }
-
-        this.qix.debug.debugConsolePoints('hello', points);
 
         let polygonPoints: ExtPoint[] = [];
         const firstPoint = points[0];
@@ -127,7 +128,6 @@ export class AllPoints {
         pts.push(points[points.length - 1]);
 
         // Check if first/last point (same point) should be removed
-        // console.info(pts);
         if (pts[0].isBetweenTwoPointsInclusive(pts[pts.length - 2], pts[1])) {
             pts.splice(pts.length - 1, 1);
             pts.splice(0, 1);
@@ -137,13 +137,7 @@ export class AllPoints {
         return pts;
     }
 
-
     /**
-     * Assumptions:
-     * - Both arrays (new polygon, and old inner points) of points go clockwise
-     * - Both arrays, first and last point are the same.
-     *
-     * Algorithm (come back to this to make more efficient...)
      * - Loop through innerPoint lines, and then loop through polygon lines, and find all overlaps.
      *      and record "bisection" point.
      * - Replace inner point lines based on bisection point
@@ -151,14 +145,10 @@ export class AllPoints {
      *
      * @param {ExtPoint[]} newPolygonPoints
      * @param {ExtPoint[]} innerPoints
-     * @returns {ExtPoint[]}
      */
     updateNewInnerPoints(newPolygonPoints: ExtPoint[]): void {
         const polygonLines: Line[] = GeomUtils.getLinesFromPolygonPoints(newPolygonPoints);
-        // Remove the last point which is the repeated first point
-        const polygonPoints = newPolygonPoints.splice(newPolygonPoints.length - 1, 1);
         const innerLines: Line[] = GeomUtils.getLinesFromPolygonPoints(this.innerPolygonPointsClockwise);
-
 
         //
         // First find a starting inner line index where it overlaps with a polygon line
@@ -185,6 +175,7 @@ export class AllPoints {
         let newInnerLinesInsertionIndex = -1;
         let polygonLinesStartIndexForInsertion = 0;
         let newInnerLines: Line[] = [];
+
         for (let i = 0; i < innerLines.length; i++) {
             const innerLinesIndex = nextIndex(innerLines, i, startingInnerLineIndex);
             const innerLine = innerLines[innerLinesIndex];
@@ -192,7 +183,6 @@ export class AllPoints {
 
             if (! GeomUtils.lineContainsAnyLine(innerLine, polygonLines)) {
                 newInnerLines.push(innerLine);
-                // this.qix.debug.debugConsoleLines('newInnerLines1', newInnerLines);
             }
             for (let polygonLinesIndex = 0; polygonLinesIndex < polygonLines.length; polygonLinesIndex++) {
                 const polygonLine = polygonLines[polygonLinesIndex];
@@ -203,8 +193,6 @@ export class AllPoints {
                 if (GeomUtils.lineContainsLineAndNotEqual(innerLine, polygonLine)) {
                     lineBisectionToAdd = GeomUtils.subtractLinesWhereLine1ContainsLine2(innerLine, polygonLine);
                     newInnerLines = newInnerLines.concat(lineBisectionToAdd);
-                    // console.info('innerLine', innerLine, 'polygonLine', polygonLine);
-                    // this.qix.debug.debugConsoleLines('newInnerLines2', newInnerLines);
                 }
 
                 if (newInnerLinesInsertionIndex === -1) {
@@ -230,25 +218,17 @@ export class AllPoints {
             const polygonLinesIndex = nextIndex(polygonLines, i, polygonLinesStartIndexForInsertion);
             const polygonLine = polygonLines[polygonLinesIndex];
 
-            if (! GeomUtils.lineContainsAnyLine(polygonLine, innerLines)) {
+            if (! GeomUtils.linesContainAnyLine(innerLines, polygonLine)) {
                 polygonLinesToInsert.push(polygonLine);
             }
         }
-        polygonLinesToInsert = GeomUtils.reverseLines(polygonLinesToInsert);
 
-        // this.qix.debug.debugConsoleLines('newInnerLines', newInnerLines);
-        // this.qix.debug.debugConsoleLines('polygonLinesToInsert', polygonLinesToInsert);
-        // console.info('newInnerLinesInsertionIndex', newInnerLinesInsertionIndex);
+        polygonLinesToInsert = GeomUtils.reverseLines(polygonLinesToInsert);
 
         newInnerLines.splice(newInnerLinesInsertionIndex, 0, ...polygonLinesToInsert);
 
-        // this.qix.debug.debugConsoleLines('oldInnerLines', innerLines);
-        // this.qix.debug.debugConsoleLines('newInnerLines', newInnerLines);
-
         this.innerPolygonPointsClockwise = GeomUtils.getPolygonPointsFromLines(newInnerLines);
         this.innerPolygonPointsClockwise = this.flattenPoints(this.innerPolygonPointsClockwise);
-
-        // this.qix.debug.debugConsolePoints('new inner polygon points clockwise', this.innerPolygonPointsClockwise);
     }
 
 

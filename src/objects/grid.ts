@@ -98,10 +98,12 @@ export class Grid {
         this.allPoints.updateNewInnerPoints(newPolygonPoints);
 
         this.qix.debug.debugHighlightPoints(newPolygonPoints, 3, true, 300, 700);
+        this.qix.debug.debugConsolePoints('newPolygonPoints', newPolygonPoints);
         // this.qix.debug.debugHighlightPoints(this.allPoints.innerPolygonPointsClockwise, 4, true, 300, 700, 0xBB22AA);
-        // this.qix.debug.debugConsolePoints('points', this.currentLines.points);
-        // this.qix.debug.debugConsolePoints('newPolygonPoints', newPolygonPoints);
         // this.qix.debug.debugConsolePoints('innerPolygonPointsClockwise', this.allPoints.innerPolygonPointsClockwise);
+
+
+        // this.qix.debug.debugConsolePoints('points', this.currentLines.points);
 
         this.currentLines.reset();
     }

@@ -75,6 +75,10 @@ export class GeomUtils {
         return lines.some((line) => this.lineContainsLine(line1, line));
     }
 
+    static linesContainAnyLine(lines: Line[], line1: Line): boolean {
+        return lines.some((line) => this.lineContainsLine(line, line1));
+    }
+
     static linesAreEqual(line1: Line, line2: Line): boolean {
         return line1.x1 === line2.x1 &&
             line1.x2 === line2.x2 &&
@@ -127,14 +131,17 @@ export class GeomUtils {
             throw new Error('Expecting at least 3 points in a polygon');
         }
 
-        if (! points[0].equals(points[length - 1])) {
-            throw new Error('Expecting first point to equal last point');
-        }
-
         let lines: Line[] = [];
 
         for (let i = 0; i < length - 1; i++) {
             lines.push(new Line(points[i].x(), points[i].y(),points[i + 1].x(), points[i + 1].y()));
+        }
+
+        //
+        // If first point is not same as last point, add an additional line to close polygon
+        //
+        if (! points[0].equals(points[length - 1])) {
+            lines.push(new Line(points[length - 1].x(), points[length - 1].y(),points[0].x(), points[0].y()));
         }
 
         return lines;
