@@ -4,6 +4,7 @@ import Qix from "../scenes/qix";
 import Polygon = Phaser.Geom.Polygon;
 import Line = Phaser.Geom.Line;
 import {GeomUtils} from "../utils/geom-utils";
+import {Debug} from "./debug";
 
 export class AllPoints {
     qix: Qix;
@@ -90,6 +91,7 @@ export class AllPoints {
 
             let firstPointBetween = firstPoint.isBetweenTwoPointsInclusive(innerPoint1, innerPoint2);
             let lastPointBetween = lastPoint.isBetweenTwoPointsInclusive(innerPoint1, innerPoint2);
+
             let firstAndLastPointsBetween = firstPointBetween && lastPointBetween;
 
             if (firstAndLastPointsBetween) {
@@ -150,6 +152,8 @@ export class AllPoints {
         const polygonLines: Line[] = GeomUtils.getLinesFromPolygonPoints(newPolygonPoints);
         const innerLines: Line[] = GeomUtils.getLinesFromPolygonPoints(this.innerPolygonPointsClockwise);
 
+        // this.qix.debug.infoLines('innerLines initial', innerLines);
+
         //
         // First find a starting inner line index where it overlaps with a polygon line
         //
@@ -166,7 +170,7 @@ export class AllPoints {
         }
 
         const nextIndex = (array: any[], index: integer, increment: integer = 1) => {
-            return (index < array.length - increment) ? index + increment: 0;
+            return (index < (array.length - increment)) ? (index + increment): ((index + increment) - array.length);
         };
 
         //
@@ -177,8 +181,14 @@ export class AllPoints {
         let newInnerLines: Line[] = [];
 
         for (let i = 0; i < innerLines.length; i++) {
+            // this.qix.debug.info(`index:${i}  innerLines.length:${innerLines.length}  increment:${startingInnerLineIndex}`);
             const innerLinesIndex = nextIndex(innerLines, i, startingInnerLineIndex);
+            // this.qix.debug.info(`innerLinesIndex: ${innerLinesIndex}`);
+
             const innerLine = innerLines[innerLinesIndex];
+
+            // this.qix.debug.info(`innerLine: ${innerLine.x1},${innerLine.y2} -> ${innerLine.x1},${innerLine.y2}`);
+
             const nextInnerLine = innerLines[nextIndex(innerLines, innerLinesIndex)];
 
             if (! GeomUtils.lineContainsAnyLine(innerLine, polygonLines)) {
@@ -210,6 +220,8 @@ export class AllPoints {
             }
         }
 
+        // this.qix.debug.infoLines('newInnerLines before adding inner polygon', newInnerLines);
+
         //
         // Add all the new polygon non-intersecting lines counter-clockwise
         //
@@ -227,7 +239,12 @@ export class AllPoints {
 
         newInnerLines.splice(newInnerLinesInsertionIndex, 0, ...polygonLinesToInsert);
 
+        // this.qix.debug.infoLines('newInnerLines after adding inner polygon', newInnerLines);
+
         this.innerPolygonPointsClockwise = GeomUtils.getPolygonPointsFromLines(newInnerLines);
+
+
+
         this.innerPolygonPointsClockwise = this.flattenPoints(this.innerPolygonPointsClockwise);
     }
 

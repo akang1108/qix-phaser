@@ -94,7 +94,7 @@ export class Grid {
 
         // this.qix.debug.highlightPoints(newPolygonPoints, 3, true, 300, 700);
         this.qix.debug.drawPoints1(newPolygonPoints);
-        this.qix.debug.infoPoints('newPolygonPoints', newPolygonPoints);
+        // this.qix.debug.infoPoints('newPolygonPoints', newPolygonPoints);
 
         // this.qix.debug.debugHighlightPoints(this.allPoints.innerPolygonPointsClockwise, 4, true, 300, 700, 0xBB22AA);
         this.qix.debug.drawPoints2(this.allPoints.innerPolygonPointsClockwise);
