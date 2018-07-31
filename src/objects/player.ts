@@ -3,10 +3,9 @@ import Scene = Phaser.Scene;
 import Circle = Phaser.Geom.Circle;
 import Point = Phaser.Geom.Point;
 import {ExtPoint} from "./ext-point";
+import {customConfig} from "../main";
 
 export class Player {
-    static RADIUS: integer = 5;
-    static COLOR: integer = 0xAA88EE;
 
     graphics: Graphics;
 
@@ -16,29 +15,29 @@ export class Player {
 
     speed: integer;
 
-    constructor(scene: Scene, x: integer, y: integer, speed: integer = 2) {
-        this.speed = speed;
+    constructor(scene: Scene, x: integer, y: integer) {
+        this.speed = customConfig.speed;
         this.graphics = scene.add.graphics();
-        this.graphics.lineStyle(1, Player.COLOR);
-        this.graphics.fillStyle(Player.COLOR);
-        this.graphics.x = x - Player.RADIUS;
-        this.graphics.y = y - Player.RADIUS;
-        this.graphics.fillCircleShape(new Circle(Player.RADIUS, Player.RADIUS, Player.RADIUS));
+        this.graphics.lineStyle(1, customConfig.playerColor);
+        this.graphics.fillStyle(customConfig.playerColor);
+        this.graphics.x = x - customConfig.playerRadius;
+        this.graphics.y = y - customConfig.playerRadius;
+        this.graphics.fillCircleShape(new Circle(customConfig.playerRadius, customConfig.playerRadius, customConfig.playerRadius));
 
         this.previousPoint = this.point();
         this.previousOnExisting = true;
     }
 
     x(): integer {
-        return this.graphics.x + Player.RADIUS;
+        return this.graphics.x + customConfig.playerRadius;
     }
 
     y(): integer {
-        return this.graphics.y + Player.RADIUS;
+        return this.graphics.y + customConfig.playerRadius;
     }
 
     point(): ExtPoint {
-        return ExtPoint.createWithCoordinates(this.graphics.x + Player.RADIUS, this.graphics.y + Player.RADIUS);
+        return ExtPoint.createWithCoordinates(this.graphics.x + customConfig.playerRadius, this.graphics.y + customConfig.playerRadius);
     }
 
     move(cursors: CursorKeys) {

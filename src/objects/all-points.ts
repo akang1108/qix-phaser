@@ -181,23 +181,14 @@ export class AllPoints {
         let newInnerLines: Line[] = [];
 
         for (let i = 0; i < innerLines.length; i++) {
-            // this.qix.debug.info(`index:${i}  innerLines.length:${innerLines.length}  increment:${startingInnerLineIndex}`);
             const innerLinesIndex = nextIndex(innerLines, i, startingInnerLineIndex);
-            // this.qix.debug.info(`innerLinesIndex: ${innerLinesIndex}`);
-
             const innerLine = innerLines[innerLinesIndex];
 
-            // this.qix.debug.info(`innerLine: ${innerLine.x1},${innerLine.y2} -> ${innerLine.x1},${innerLine.y2}`);
-
-            const nextInnerLine = innerLines[nextIndex(innerLines, innerLinesIndex)];
-
-            if (! GeomUtils.lineContainsAnyLine(innerLine, polygonLines)) {
+            if (! GeomUtils.lineOverlapsAnyLine(innerLine, polygonLines)) {
                 newInnerLines.push(innerLine);
             }
             for (let polygonLinesIndex = 0; polygonLinesIndex < polygonLines.length; polygonLinesIndex++) {
                 const polygonLine = polygonLines[polygonLinesIndex];
-                const nextPolygonLine = polygonLines[nextIndex(polygonLines, polygonLinesIndex)];
-
                 let lineBisectionToAdd: Line[] = [];
 
                 if (GeomUtils.lineContainsLineAndNotEqual(innerLine, polygonLine)) {
@@ -205,22 +196,15 @@ export class AllPoints {
                     newInnerLines = newInnerLines.concat(lineBisectionToAdd);
                 }
 
-                if (newInnerLinesInsertionIndex === -1) {
-                    if (GeomUtils.linesAreEqual(innerLine, polygonLine) && ! GeomUtils.lineContainsLine(nextInnerLine, nextPolygonLine)) {
-                        newInnerLinesInsertionIndex = newInnerLines.length;
-                        polygonLinesStartIndexForInsertion = nextIndex(polygonLines, polygonLinesIndex);
-                    } else if (lineBisectionToAdd.length === 1 && ! GeomUtils.lineContainsLine(nextInnerLine, nextPolygonLine)) {
-                        newInnerLinesInsertionIndex = newInnerLines.length - 1;
-                        polygonLinesStartIndexForInsertion = nextIndex(polygonLines, polygonLinesIndex);
-                    } else  if (lineBisectionToAdd.length === 2) {
-                        newInnerLinesInsertionIndex = newInnerLines.length - 1;
-                        polygonLinesStartIndexForInsertion = nextIndex(polygonLines, polygonLinesIndex);
-                    }
+                if (GeomUtils.lineContainsLineAndNotEqual(polygonLine, innerLine)) {
+                    lineBisectionToAdd = GeomUtils.subtractLinesWhereLine1ContainsLine2(polygonLine, innerLine);
+                    lineBisectionToAdd = GeomUtils.reverseLines(lineBisectionToAdd);
+                    newInnerLines = newInnerLines.concat(lineBisectionToAdd);
                 }
             }
         }
 
-        // this.qix.debug.infoLines('newInnerLines before adding inner polygon', newInnerLines);
+        this.qix.debug.infoLines('newInnerLines before adding inner polygon', newInnerLines);
 
         //
         // Add all the new polygon non-intersecting lines counter-clockwise
@@ -230,20 +214,32 @@ export class AllPoints {
             const polygonLinesIndex = nextIndex(polygonLines, i, polygonLinesStartIndexForInsertion);
             const polygonLine = polygonLines[polygonLinesIndex];
 
-            if (! GeomUtils.linesContainAnyLine(innerLines, polygonLine)) {
+            if (! GeomUtils.linesOverlapsLine(innerLines, polygonLine)) {
                 polygonLinesToInsert.push(polygonLine);
             }
         }
 
         polygonLinesToInsert = GeomUtils.reverseLines(polygonLinesToInsert);
 
-        newInnerLines.splice(newInnerLinesInsertionIndex, 0, ...polygonLinesToInsert);
+        this.qix.debug.infoLines('polygonLinesToInsert', polygonLinesToInsert);
+
+        // Calculate where to insert inner polygon lines
+        if (polygonLinesToInsert.length > 0) {
+            const lastPolygonLineToInsert = polygonLinesToInsert[polygonLinesToInsert.length - 1];
+            for (newInnerLinesInsertionIndex = 0; newInnerLinesInsertionIndex < newInnerLines.length; newInnerLinesInsertionIndex++) {
+                const innerLine = newInnerLines[newInnerLinesInsertionIndex];
+                if (innerLine.x1 === lastPolygonLineToInsert.x2 && innerLine.y1 === lastPolygonLineToInsert.y2) {
+                    break;
+                }
+            }
+
+            this.qix.debug.info(`newInnerLinesInsertionIndex: ${newInnerLinesInsertionIndex}`);
+            newInnerLines.splice(newInnerLinesInsertionIndex, 0, ...polygonLinesToInsert);
+        }
 
         // this.qix.debug.infoLines('newInnerLines after adding inner polygon', newInnerLines);
 
         this.innerPolygonPointsClockwise = GeomUtils.getPolygonPointsFromLines(newInnerLines);
-
-
 
         this.innerPolygonPointsClockwise = this.flattenPoints(this.innerPolygonPointsClockwise);
     }

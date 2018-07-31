@@ -1,5 +1,4 @@
 import {ExtPoint} from "../objects/ext-point";
-// import Phaser from 'phaser';
 import Line = Phaser.Geom.Line;
 import Point = Phaser.Geom.Point;
 import Rectangle = Phaser.Geom.Rectangle;
@@ -75,8 +74,16 @@ export class GeomUtils {
         return lines.some((line) => this.lineContainsLine(line1, line));
     }
 
-    static linesContainAnyLine(lines: Line[], line1: Line): boolean {
+    static lineOverlapsAnyLine(line1: Line, lines: Line[]): boolean {
+        return lines.some((line) => this.lineContainsLine(line1, line) || this.lineContainsLine(line, line1));
+    }
+
+    static linesContainLine(lines: Line[], line1: Line): boolean {
         return lines.some((line) => this.lineContainsLine(line, line1));
+    }
+
+    static linesOverlapsLine(lines: Line[], line1: Line): boolean {
+        return lines.some((line) => this.lineContainsLine(line, line1) || this.lineContainsLine(line1, line));
     }
 
     static linesAreEqual(line1: Line, line2: Line): boolean {

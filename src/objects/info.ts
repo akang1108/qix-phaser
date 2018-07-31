@@ -56,6 +56,8 @@ export class Info {
 
         data.push(`% filled:`);
         data.push(`${filledPolygons.percentAreaString()}`);
+        data.push(`yo`);
+        data.push(`hey`);
 
         this.gameLines = StringUtils.dataToLines(cols, data);
         this.gameText.setText(this.gameLines);

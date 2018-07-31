@@ -22,7 +22,10 @@ export const customConfig:GameCustomConfig = {
     infoHeight: 30,
     debugTextAreaHeight: 300,
     lineColor: 0x000,
-    fillColor: 0xCCAAFF
+    fillColor: 0xCCAAFF,
+    playerRadius: 5,
+    playerColor: 0xAA88EE,
+    speed: 5
 };
 
 export const game = new Phaser.Game(config);
@@ -35,5 +38,8 @@ export interface GameCustomConfig {
     debugTextAreaHeight: integer;
     lineColor: integer;
     fillColor: integer;
+    playerRadius: integer;
+    playerColor: integer;
+    speed: integer;
 }
 

@@ -94,7 +94,7 @@ export class Grid {
 
         // this.qix.debug.highlightPoints(newPolygonPoints, 3, true, 300, 700);
         this.qix.debug.drawPoints1(newPolygonPoints);
-        // this.qix.debug.infoPoints('newPolygonPoints', newPolygonPoints);
+        this.qix.debug.infoPoints('newPolygonPoints', newPolygonPoints);
 
         // this.qix.debug.debugHighlightPoints(this.allPoints.innerPolygonPointsClockwise, 4, true, 300, 700, 0xBB22AA);
         this.qix.debug.drawPoints2(this.allPoints.innerPolygonPointsClockwise);
@@ -115,8 +115,8 @@ export class Grid {
 
     isIllegalMove(player: Player, cursors: CursorKeys): boolean {
         const newPosition = player.getMove(cursors);
-        newPosition.x += Player.RADIUS;
-        newPosition.y += Player.RADIUS;
+        newPosition.x += customConfig.playerRadius;
+        newPosition.y += customConfig.playerRadius;
 
         const outOfBounds =
             (newPosition.x < this.frame.rectangle.x) ||
@@ -124,6 +124,18 @@ export class Grid {
             (newPosition.y < this.frame.rectangle.y) ||
             (newPosition.y > this.frame.rectangle.y + this.frame.rectangle.height);
 
-        return outOfBounds || this.filledPolygons.pointWithinPolygon(new ExtPoint(newPosition));
+        const withinFilledPolygon = this.filledPolygons.pointWithinPolygon(new ExtPoint(newPosition));
+
+        const hittingCurrentLines = this.currentLines.lines.some((line) => {
+            return Phaser.Geom.Intersects.PointToLineSegment(newPosition, line);
+        });
+
+        return outOfBounds || withinFilledPolygon || hittingCurrentLines;
+    }
+
+    checkForWin(): boolean {
+        // this.qix.debug.info(`${this.filledPolygons.percentArea()} ${this.qix.levels.coverageTarget}`);
+        // this.qix.debug.info(`${this.filledPolygons.percentArea()}`);
+        return (this.filledPolygons.percentArea() >= this.qix.levels.coverageTarget);
     }
 }
