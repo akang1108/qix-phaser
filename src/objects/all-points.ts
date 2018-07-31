@@ -1,170 +1,248 @@
 import Rectangle = Phaser.Geom.Rectangle;
-import Point = Phaser.Geom.Point;
-import Line = Phaser.Geom.Line;
-import Polygon = Phaser.Geom.Polygon;
 import {ExtPoint} from "./ext-point";
-import {GeomUtils} from "../utils/geom-utils";
 import Qix from "../scenes/qix";
+import Polygon = Phaser.Geom.Polygon;
+import Line = Phaser.Geom.Line;
+import {GeomUtils} from "../utils/geom-utils";
 import {Debug} from "./debug";
 
 export class AllPoints {
     qix: Qix;
-
-    points: ExtPoint[];
-    innerPolygonClockwiseLines: Line[];
+    innerPolygonPointsClockwise: ExtPoint[];
 
     constructor(qix: Qix, rectangle: Rectangle) {
         this.qix = qix;
-        this.points = [];
-        this.innerPolygonClockwiseLines = GeomUtils.createLinesFromPoints(this.getClockwiseRectanglePoints(rectangle));
+        this.innerPolygonPointsClockwise = GeomUtils.getClockwiseRectanglePoints(rectangle);
     }
 
-    addPoints(points: ExtPoint[]) {
-        this.points.concat(points);
+    calculateNewClockwisePolygonPoints(points: ExtPoint[]): ExtPoint[] {
+        const newPoints = this.calculateNewPolygonPointsNormal(points);
+        const newPolygon = new Polygon(newPoints.map(point => point.point));
+
+        const newInversePoints = this.calculateNewPolygonPointsInverse(points);
+        const newInversePolygon = new Polygon(newInversePoints.map(point => point.point));
+
+        // TODO: when enemy added, choose area that enemy is not in...
+        const smallerAreaPoints = Math.abs(newPolygon.area) <= Math.abs(newInversePolygon.area) ? newPoints : newInversePoints;
+        let newClockwisePoints = GeomUtils.makeClockwisePoints(smallerAreaPoints);
+
+        // Remove the last point which is the repeated first point
+        newClockwisePoints.splice(newClockwisePoints.length - 1, 1);
+
+        return newClockwisePoints;
     }
 
-    extrapolatePointsAndUpdateInnerPolygon(points: ExtPoint[]): ExtPoint[] {
-        const clockwisePoints = this.extrapolatePoints(points, true, false);
-        const counterClockwisePoints = this.extrapolatePoints(points, false, false);
-
-        const clockwisePolygon = new Polygon(clockwisePoints.map(point => point.point));
-        const counterClockwisePolygon = new Polygon(counterClockwisePoints.map(point => point.point));
-
-        // Current algorithm - pick smaller area
-        const clockwise = Math.abs(clockwisePolygon.area) <= Math.abs(counterClockwisePolygon.area);
-
-        this.extrapolatePoints(points, clockwise, true);
-
-        return clockwise ? clockwisePoints : counterClockwisePoints;
+    calculateNewPolygonPointsNormal(points: ExtPoint[]): ExtPoint[] {
+        return this.calculateNewPolygonPointsWithInnerPoints(points, this.innerPolygonPointsClockwise.slice(), false);
     }
 
-    extrapolatePoints(points: ExtPoint[], clockwise: boolean, updateInnerPolygon: boolean): ExtPoint[] {
-        const extrapolatedPoints: ExtPoint[] = points.map((point) => point);
+    calculateNewPolygonPointsInverse(points: ExtPoint[]): ExtPoint[] {
+        return this.calculateNewPolygonPointsWithInnerPoints(points.slice(), this.innerPolygonPointsClockwise.slice(), true);
+    }
+
+    /**
+     * Based on new points drawn and existing inner points - calculate new closed polygon points clockwise. There could be
+     *  2 different closed polygons calculated by the newly drawn points, so inverse flag gives the 2 different polygons..
+     *
+     * @param {ExtPoint[]} points
+     * @param {ExtPoint[]} innerPoints
+     * @param {boolean} inverse
+     * @returns {ExtPoint[]} - the last point is not a repeat of the first point
+     */
+    calculateNewPolygonPointsWithInnerPoints(points: ExtPoint[], innerPoints: ExtPoint[], inverse: boolean = false): ExtPoint[] {
+        if (inverse) {
+            points = points.reverse();
+        }
+
+        let polygonPoints: ExtPoint[] = [];
         const firstPoint = points[0];
         const lastPoint = points[points.length - 1];
 
-        const lines = clockwise ? this.innerPolygonClockwiseLines : this.innerPolygonClockwiseLines.slice().reverse();
+        const processRestOfPoints = (innerPointIndex: number) => {
+            for (let i = 1; i < points.length; i++) {
+                polygonPoints.push(points[i]);
+            }
 
-        let lastPointInnerLineIntersectIndex: integer, firstPointInnerLineIntersectIndex: integer,
-            injectLine1: Line, injectLine2: Line,
-            injectInnerLines: Line[] = [],
-            newInnerLinesClockwise;
+            let lastPointPassed: boolean = false;
 
-        for (let i = 0; i < lines.length; i++) {
-            let line = lines[i];
+            for (let i = 0; i < innerPoints.length; i++) {
+                let innerPoint1 = innerPoints[innerPointIndex];
+                let innerPoint2 = innerPoints[innerPointIndex + 1];
+                innerPointIndex = (innerPointIndex < innerPoints.length - 2) ? innerPointIndex + 1 : 0;
 
-            if (Phaser.Geom.Intersects.PointToLineSegment(lastPoint.point, line)) {
-                lastPointInnerLineIntersectIndex = i;
-                injectLine1 = clockwise ? new Line(line.x1, line.y1, lastPoint.x(), lastPoint.y()) : new Line(lastPoint.x(), lastPoint.y(), line.x2, line.y2);
+                let firstPointBetween = firstPoint.isBetweenTwoPointsInclusive(innerPoint1, innerPoint2);
+                let lastPointBetween = lastPoint.isBetweenTwoPointsInclusive(innerPoint1, innerPoint2);
 
-                while (! Phaser.Geom.Intersects.PointToLineSegment(firstPoint.point, line)) {
-                    if (clockwise) {
-                        extrapolatedPoints.push(new ExtPoint(new Point(line.x2, line.y2)));
-                    } else {
-                        extrapolatedPoints.push(new ExtPoint(new Point(line.x1, line.y1)));
+                if (lastPointBetween) {
+                    lastPointPassed = true;
+                } else if (lastPointPassed) {
+                    polygonPoints.push(innerPoint1);
+                    if (firstPointBetween) {
+                        polygonPoints.push(firstPoint);
+                        break;
                     }
-
-                    i = this.nextIndex(lines.length, i);
-                    line = lines[i];
                 }
+            }
+        };
 
-                firstPointInnerLineIntersectIndex = i;
-                injectLine2 = clockwise ? new Line(firstPoint.x(), firstPoint.y(), line.x2, line.y2) : new Line(line.x1, line.y1, firstPoint.x(), firstPoint.y());
+        for (let innerPointIndex = 0; innerPointIndex < innerPoints.length - 1; innerPointIndex++) {
+            let innerPoint1 = innerPoints[innerPointIndex];
+            let innerPoint2 = innerPoints[innerPointIndex + 1];
 
+            let firstPointBetween = firstPoint.isBetweenTwoPointsInclusive(innerPoint1, innerPoint2);
+            let lastPointBetween = lastPoint.isBetweenTwoPointsInclusive(innerPoint1, innerPoint2);
+
+            let firstAndLastPointsBetween = firstPointBetween && lastPointBetween;
+
+            if (firstAndLastPointsBetween) {
+                polygonPoints = polygonPoints.concat(points);
+                polygonPoints.push(firstPoint);
+                break;
+            } else if (firstPointBetween) {
+                polygonPoints.push(firstPoint);
+                processRestOfPoints(innerPointIndex);
                 break;
             }
         }
 
-        if (updateInnerPolygon) {
+        polygonPoints = this.flattenPoints(polygonPoints);
 
-            if (clockwise) {
-                injectInnerLines.push(injectLine1);
-                for (let i = points.length - 1; i > 0; i--) {
-                    const p1 = points[i], p2 = points[i - 1];
-                    injectInnerLines.push(new Line(p1.x(), p1.y(), p2.x(), p2.y()));
+        return polygonPoints;
+    }
+
+    /**
+     * Remove any points that are in middle of a line
+     *
+     * @param {ExtPoint[]} points
+     * @returns {ExtPoint[]}
+     */
+    flattenPoints(points: ExtPoint[]): ExtPoint[] {
+        let pts: ExtPoint[] = [];
+
+        pts.push(points[0]);
+        for (let pointIndex = 0; pointIndex < points.length - 2; pointIndex++) {
+            const point1 = points[pointIndex], point2 = points[pointIndex + 1], point3 = points[pointIndex + 2];
+
+            if (! point2.isBetweenTwoPointsInclusive(point1, point3)) {
+                pts.push(point2);
+            }
+        }
+        pts.push(points[points.length - 1]);
+
+        // Check if first/last point (same point) should be removed
+        if (pts[0].isBetweenTwoPointsInclusive(pts[pts.length - 2], pts[1])) {
+            pts.splice(pts.length - 1, 1);
+            pts.splice(0, 1);
+            pts.push(pts[0]);
+        }
+
+        return pts;
+    }
+
+    /**
+     * - Loop through innerPoint lines, and then loop through polygon lines, and find all overlaps.
+     *      and record "bisection" point.
+     * - Replace inner point lines based on bisection point
+     * - Insert the remaining non overlap lines from new polygon in counter clockwise fashion.
+     *
+     * @param {ExtPoint[]} newPolygonPoints
+     * @param {ExtPoint[]} innerPoints
+     */
+    updateNewInnerPoints(newPolygonPoints: ExtPoint[]): void {
+        const polygonLines: Line[] = GeomUtils.getLinesFromPolygonPoints(newPolygonPoints);
+        const innerLines: Line[] = GeomUtils.getLinesFromPolygonPoints(this.innerPolygonPointsClockwise);
+
+        // this.qix.debug.infoLines('innerLines initial', innerLines);
+
+        //
+        // First find a starting inner line index where it overlaps with a polygon line
+        //
+        let startingInnerLineIndex = 0;
+        outer:
+        for (startingInnerLineIndex = 0; startingInnerLineIndex < innerLines.length; startingInnerLineIndex++) {
+            const innerLine = innerLines[startingInnerLineIndex];
+            for (let polygonLinesIndex = 0; polygonLinesIndex < polygonLines.length; polygonLinesIndex++) {
+                const polygonLine = polygonLines[polygonLinesIndex];
+                if (GeomUtils.linesAreEqual(innerLine, polygonLine) || GeomUtils.lineContainsLine(innerLine, polygonLine)) {
+                    break outer;
                 }
-                injectInnerLines.push(injectLine2);
-            } else {
-                injectInnerLines.push(injectLine2);
-                for (let i = 0; i < points.length - 1; i++) {
-                    const p1 = points[i], p2 = points[i + 1];
-                    injectInnerLines.push(new Line(p1.x(), p1.y(), p2.x(), p2.y()));
+            }
+        }
+
+        const nextIndex = (array: any[], index: integer, increment: integer = 1) => {
+            return (index < (array.length - increment)) ? (index + increment): ((index + increment) - array.length);
+        };
+
+        //
+        // Loop through inner lines starting at the startingInnerLineIndex (and wrap around array)
+        //
+        let newInnerLinesInsertionIndex = -1;
+        let polygonLinesStartIndexForInsertion = 0;
+        let newInnerLines: Line[] = [];
+
+        for (let i = 0; i < innerLines.length; i++) {
+            const innerLinesIndex = nextIndex(innerLines, i, startingInnerLineIndex);
+            const innerLine = innerLines[innerLinesIndex];
+
+            if (! GeomUtils.lineOverlapsAnyLine(innerLine, polygonLines)) {
+                newInnerLines.push(innerLine);
+            }
+            for (let polygonLinesIndex = 0; polygonLinesIndex < polygonLines.length; polygonLinesIndex++) {
+                const polygonLine = polygonLines[polygonLinesIndex];
+                let lineBisectionToAdd: Line[] = [];
+
+                if (GeomUtils.lineContainsLineAndNotEqual(innerLine, polygonLine)) {
+                    lineBisectionToAdd = GeomUtils.subtractLinesWhereLine1ContainsLine2(innerLine, polygonLine);
+                    newInnerLines = newInnerLines.concat(lineBisectionToAdd);
                 }
-                injectInnerLines.push(injectLine1);
+
+                if (GeomUtils.lineContainsLineAndNotEqual(polygonLine, innerLine)) {
+                    lineBisectionToAdd = GeomUtils.subtractLinesWhereLine1ContainsLine2(polygonLine, innerLine);
+                    lineBisectionToAdd = GeomUtils.reverseLines(lineBisectionToAdd);
+                    newInnerLines = newInnerLines.concat(lineBisectionToAdd);
+                }
             }
-
-            newInnerLinesClockwise = this.innerPolygonClockwiseLines.slice();
-            if (firstPointInnerLineIntersectIndex < lastPointInnerLineIntersectIndex) {
-                newInnerLinesClockwise.splice(lastPointInnerLineIntersectIndex, newInnerLinesClockwise.length - lastPointInnerLineIntersectIndex);
-                newInnerLinesClockwise.splice(0, firstPointInnerLineIntersectIndex + 1);
-            } else {
-                newInnerLinesClockwise.splice(lastPointInnerLineIntersectIndex, (firstPointInnerLineIntersectIndex - lastPointInnerLineIntersectIndex + 1));
-            }
-
-            newInnerLinesClockwise.splice(lastPointInnerLineIntersectIndex, 0, ...injectInnerLines);
-
-            this.innerPolygonClockwiseLines = newInnerLinesClockwise;
-
-            if (Debug.DEBUG) {
-                this.drawNextDebug(
-                    this.innerPolygonClockwiseLines,
-                    0,
-                    0,
-                    3000,
-                    0xFF0000,
-                    3);
-
-                this.drawNextDebug(
-                    injectInnerLines,
-                    0,
-                    10,
-                    1000,
-                    0x00FF00,
-                    5);
-            }
-
-            console.info(`lastPointInnerLineIntersectIndex: ${lastPointInnerLineIntersectIndex}  firstPointInnerLineIntersectIndex: ${firstPointInnerLineIntersectIndex}`);
-            console.info(`injectInnerLines`);
-            console.table(injectInnerLines);
-            console.info(`newInnerLinesClockwise`);
-            console.table(newInnerLinesClockwise);
-            // console.info(`lines:` + lines.map(line => '(' + StringUtils.prettyLine(line) + ')'));
         }
 
-        return extrapolatedPoints;
-    }
+        this.qix.debug.infoLines('newInnerLines before adding inner polygon', newInnerLines);
 
-    drawNextDebug(lines: Line[], index: integer, t1: integer, t2: integer, color: number, size: number) {
-        if (index > lines.length - 1) {
-            return;
+        //
+        // Add all the new polygon non-intersecting lines counter-clockwise
+        //
+        let polygonLinesToInsert: Line[] = [];
+        for (let i = 0; i < polygonLines.length; i++) {
+            const polygonLinesIndex = nextIndex(polygonLines, i, polygonLinesStartIndexForInsertion);
+            const polygonLine = polygonLines[polygonLinesIndex];
+
+            if (! GeomUtils.linesOverlapsLine(innerLines, polygonLine)) {
+                polygonLinesToInsert.push(polygonLine);
+            }
         }
 
-        const g = this.qix.add.graphics();
-        g.lineStyle(size, color);
-        g.strokeLineShape(lines[index]);
-        setTimeout(() => {
-            this.drawNextDebug(lines, index + 1, t1, t2, color, size);
-        }, t1);
+        polygonLinesToInsert = GeomUtils.reverseLines(polygonLinesToInsert);
 
-        setTimeout(() => {
-            g.destroy();
-        }, (t2 - (t1 * index)));
-    }
+        this.qix.debug.infoLines('polygonLinesToInsert', polygonLinesToInsert);
 
-    nextIndex(length: integer, i: integer): integer {
-        if (i === length - 1) {
-            return 0;
-        } else {
-            return i + 1;
+        // Calculate where to insert inner polygon lines
+        if (polygonLinesToInsert.length > 0) {
+            const lastPolygonLineToInsert = polygonLinesToInsert[polygonLinesToInsert.length - 1];
+            for (newInnerLinesInsertionIndex = 0; newInnerLinesInsertionIndex < newInnerLines.length; newInnerLinesInsertionIndex++) {
+                const innerLine = newInnerLines[newInnerLinesInsertionIndex];
+                if (innerLine.x1 === lastPolygonLineToInsert.x2 && innerLine.y1 === lastPolygonLineToInsert.y2) {
+                    break;
+                }
+            }
+
+            this.qix.debug.info(`newInnerLinesInsertionIndex: ${newInnerLinesInsertionIndex}`);
+            newInnerLines.splice(newInnerLinesInsertionIndex, 0, ...polygonLinesToInsert);
         }
+
+        // this.qix.debug.infoLines('newInnerLines after adding inner polygon', newInnerLines);
+
+        this.innerPolygonPointsClockwise = GeomUtils.getPolygonPointsFromLines(newInnerLines);
+
+        this.innerPolygonPointsClockwise = this.flattenPoints(this.innerPolygonPointsClockwise);
     }
 
-    private getClockwiseRectanglePoints(rectangle: Rectangle): ExtPoint[] {
-        let points: ExtPoint[] = [];
-        points.push(new ExtPoint(new Point(rectangle.left, rectangle.top)));
-        points.push(new ExtPoint(new Point(rectangle.right, rectangle.top)));
-        points.push(new ExtPoint(new Point(rectangle.right, rectangle.bottom)));
-        points.push(new ExtPoint(new Point(rectangle.left, rectangle.bottom)));
-        return points;
-    }
+
 }

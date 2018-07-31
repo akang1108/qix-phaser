@@ -1,50 +1,177 @@
 import Qix from "../scenes/qix";
-import {StringUtils} from "../utils/string-utils";
-import {config} from "../main";
+import {config, customConfig} from "../main";
+import {ExtPoint} from "./ext-point";
+import Line = Phaser.Geom.Line;
+import * as $ from "jquery";
+import Graphics = Phaser.GameObjects.Graphics;
+import {ExtRectangle} from "./ext-rectangle";
+import Rectangle = Phaser.Geom.Rectangle;
+import Point = Phaser.Geom.Point;
 
 export class Debug {
 
-    static DEBUG = true;
-
     qix: Qix;
+
+    debugTextArea$: JQuery;
+
+    graphics1Y = 3 * customConfig.margin + customConfig.frameHeight + customConfig.infoHeight;
+    graphics2Y = 4 * customConfig.margin + 2 * customConfig.frameHeight + customConfig.infoHeight;
+
+    frame1: Graphics;
+    frame2: Graphics;
+
+    graphics1: Graphics;
+    graphics2: Graphics;
 
     constructor(qix: Qix) {
         this.qix = qix;
+
+        this.debugTextArea$ = $('#debugTextArea');
+
+        if (customConfig.debug) {
+            this.debugTextArea$.width(`${config.width}px`).height(`${customConfig.debugTextAreaHeight}px`);
+            this.debugTextArea$.css('font-family', '"Lucida Console", Monaco, monospace');
+
+            this.frame1 = this.createGraphics(this.graphics1Y, true);
+            this.graphics1 = this.createGraphics();
+
+            this.frame2 = this.createGraphics(this.graphics2Y, false);
+            this.graphics2 = this.createGraphics();
+        } else {
+            this.debugTextArea$.hide();
+        }
     }
 
-    update(time: number, delta: number) {
-        if (! Debug.DEBUG) {
-            return
+    createGraphics(y: integer = 0, withRect: boolean = false): Graphics {
+        const graphics: Graphics = this.qix.add.graphics();
+        graphics.lineStyle(1, customConfig.lineColor);
+        graphics.fillStyle(customConfig.fillColor);
+
+        if (withRect) {
+            const rect = new ExtRectangle(new Rectangle(
+                customConfig.margin,
+                y,
+                config.width as number - 2 * customConfig.margin,
+                customConfig.frameHeight));
+
+            graphics.strokeRectShape(rect.rectangle);
         }
 
-        let lines: string[] = this.debug(this.qix);
-
-        this.qix.info.updateDebugText(lines, delta);
+        return graphics;
     }
 
-    debug(qix: Qix): string[] {
-        const cols = [15, 40, 15, 40];
+    highlightPoints(points: ExtPoint[], radius = 3, fill = true, buffer = 500, destroyTime = 1200, color = 0x33AA55): void {
+        const drawPointFunc = ((index: string) => {
+            const point = points[parseInt(index)];
+            const g = this.qix.add.graphics();
+            g.lineStyle(1, color);
+            g.fillStyle(color);
+            if (fill) {
+                g.fillCircle(point.x(), point.y(), radius);
+            } else {
+                g.strokeCircle(point.x(), point.y(), radius);
+            }
+            setTimeout(() => { g.destroy(); }, destroyTime);
+        });
 
-        const player = qix.player;
-        const grid = qix.grid;
-        const frame = qix.grid.frame;
-        const info = qix.info;
+        for (let i in points) {
+            const time = buffer * Number(i);
+            setTimeout(() => {
+                drawPointFunc(i);
+            }, time);
+        }
+    }
 
-        let data: string[] = [];
+    drawLines(graphics: Graphics, lines: Line[], clearFirst: boolean = true): void {
+        if (clearFirst) {
+            graphics.clear();
+        }
 
-        data.push(`scene:`);
-        data.push(`w[${config.width}] h[${config.height}]`);
-        data.push(`frame:`);
-        data.push(`pt[${frame.x()},${frame.y()}]  w[${frame.width()}] h[${frame.height()}]`);
-        data.push(`info:`);
-        data.push(`pt[${info.x()},${info.y()}]  w[${info.width()}] h[${info.height()}]`);
-        data.push(`on existing:`);
-        data.push(`${grid.onExistingLine(player)}`);
-        data.push(`on frame:`);
-        data.push(`${frame.pointOnOutline(player.point().point)}`);
-        data.push(`on polygon:`);
-        data.push(`${grid.filledPolygons.pointOnLine(player.point())}`);
+        lines.forEach((line) => { graphics.strokeLineShape(line); });
+    }
 
-        return StringUtils.dataToLines(cols, data);
+    drawPoints1(points: ExtPoint[], clearFirst: boolean = true): void {
+        this.drawPoints(this.graphics1, points, this.graphics1Y, clearFirst);
+    }
+
+    drawPoints2(points: ExtPoint[], clearFirst: boolean = true): void {
+        this.drawPoints(this.graphics2, points, this.graphics2Y, clearFirst);
+    }
+
+    drawPoints(graphics: Graphics, points: ExtPoint[], y: integer, clearFirst: boolean = true): void {
+        if (clearFirst) {
+            graphics.clear();
+        }
+
+        let pts: Point[] = [];
+        points.forEach((point) => {
+            let pt: Point = new Point(point.x(), point.y() + y - customConfig.margin);
+            pts.push(pt);
+        });
+
+        graphics.strokePoints(pts, true);
+    }
+
+    infoPoints(text: string, points: ExtPoint[]): void {
+        this.table(text, points.map((pt) => pt.point));
+    }
+
+    infoLines(text: string, lines: Line[]): void {
+        this.table(text, lines);
+    }
+
+    info(text: string): void {
+        this.debugTextArea$.html(this.debugTextArea$.html() + text + '\n');
+        this.infoScroll();
+    }
+
+    table(title: string, objects: any[]): void {
+        const indent: string = '> ';
+
+        this.info(title);
+
+        if (objects.length === 0) {
+            return;
+        }
+
+        const keys: string[] = Object.getOwnPropertyNames(objects[0]);
+
+        let header: string = `${indent}idx `;
+
+        let colWidths: integer[] = [];
+        for (let ki = 0; ki < keys.length; ki++) { colWidths.push(0); }
+        for (let oi = 0; oi < objects.length; oi++) {
+            const object = objects[oi];
+            for (let ki = 0; ki < keys.length; ki++) {
+                const key = keys[ki];
+                const length  = object[key].toString().length + 1;
+                colWidths[ki] = (colWidths[ki] > length) ? colWidths[ki] : length;
+            }
+        }
+
+        for (let ki = 0; ki < keys.length; ki++) {
+            header += this.pad(keys[ki], colWidths[ki]);
+        }
+        this.info(header);
+
+        for (let oi = 0; oi < objects.length; oi++) {
+            const object = objects[oi];
+            let line: string = indent + this.pad(oi.toString(), 4);
+
+            for (let ki = 0; ki < keys.length; ki++) {
+                const key = keys[ki];
+                line += this.pad(object[key].toString(), colWidths[ki]);
+            }
+
+            this.info(line);
+        }
+    }
+
+    infoScroll(): void {
+        this.debugTextArea$.scrollTop((this.debugTextArea$[0].scrollHeight - this.debugTextArea$.height()));
+    }
+
+    pad(str: string, length: integer, padChar: string = ' '): string {
+        return (str + Array(length).join(padChar)).substring(0, length);
     }
 }
