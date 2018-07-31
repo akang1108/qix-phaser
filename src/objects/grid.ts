@@ -1,6 +1,6 @@
 import Graphics = Phaser.GameObjects.Graphics;
 import Rectangle = Phaser.Geom.Rectangle;
-import {config} from "../main";
+import {config, customConfig} from "../main";
 import {Player} from "./player";
 import {ExtPoint} from "./ext-point";
 import Qix from "../scenes/qix";
@@ -10,10 +10,6 @@ import {CurrentLines} from "./current-lines";
 import {AllPoints} from "./all-points";
 
 export class Grid {
-    static FRAME_MARGIN: integer = 10;
-    static FRAME_HEIGHT: integer;
-    static LINE_COLOR: integer = 0x000;
-    static FILL_COLOR: integer = 0xCCAAFF;
     static FRAME_HEIGHT_PERCENT: number = .7;
 
     qix: Qix;
@@ -35,16 +31,15 @@ export class Grid {
     }
 
     createFrame(): void {
-        Grid.FRAME_HEIGHT = Math.round(config.height as number * Grid.FRAME_HEIGHT_PERCENT);
         this.frameGraphics = this.qix.add.graphics();
-        this.frameGraphics.lineStyle(1, Grid.LINE_COLOR);
-        this.frameGraphics.fillStyle(Grid.FILL_COLOR);
+        this.frameGraphics.lineStyle(1, customConfig.lineColor);
+        this.frameGraphics.fillStyle(customConfig.fillColor);
 
         this.frame = new ExtRectangle(new Rectangle(
-            Grid.FRAME_MARGIN,
-            Grid.FRAME_MARGIN,
-            config.width as number - 2 * Grid.FRAME_MARGIN,
-            Grid.FRAME_HEIGHT));
+            customConfig.margin,
+            customConfig.margin,
+            config.width as number - 2 * customConfig.margin,
+            customConfig.frameHeight));
 
         this.frameArea = this.frame.rectangle.height * this.frame.rectangle.width;
         this.frameGraphics.strokeRectShape(this.frame.rectangle);
@@ -97,11 +92,13 @@ export class Grid {
         this.filledPolygons.drawFilledPolygon(newPolygonPoints);
         this.allPoints.updateNewInnerPoints(newPolygonPoints);
 
-        this.qix.debug.debugHighlightPoints(newPolygonPoints, 3, true, 300, 700);
-        this.qix.debug.debugConsolePoints('newPolygonPoints', newPolygonPoints);
-        // this.qix.debug.debugHighlightPoints(this.allPoints.innerPolygonPointsClockwise, 4, true, 300, 700, 0xBB22AA);
-        // this.qix.debug.debugConsolePoints('innerPolygonPointsClockwise', this.allPoints.innerPolygonPointsClockwise);
+        // this.qix.debug.highlightPoints(newPolygonPoints, 3, true, 300, 700);
+        this.qix.debug.drawPoints1(newPolygonPoints);
+        this.qix.debug.infoPoints('newPolygonPoints', newPolygonPoints);
 
+        // this.qix.debug.debugHighlightPoints(this.allPoints.innerPolygonPointsClockwise, 4, true, 300, 700, 0xBB22AA);
+        this.qix.debug.drawPoints2(this.allPoints.innerPolygonPointsClockwise);
+        this.qix.debug.infoPoints('innerPolygonPointsClockwise', this.allPoints.innerPolygonPointsClockwise);
 
         // this.qix.debug.debugConsolePoints('points', this.currentLines.points);
 

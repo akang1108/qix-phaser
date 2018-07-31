@@ -4,6 +4,7 @@ import {Player} from "./player";
 import {ExtPoint} from "./ext-point";
 import Qix from "../scenes/qix";
 import {Grid} from "./grid";
+import {customConfig} from "../main";
 
 
 export class CurrentLines {
@@ -18,8 +19,8 @@ export class CurrentLines {
         this.qix = qix;
 
         this.graphics = this.qix.add.graphics();
-        this.graphics.lineStyle(1, Grid.LINE_COLOR);
-        this.graphics.fillStyle(Grid.FILL_COLOR);
+        this.graphics.lineStyle(1, customConfig.lineColor);
+        this.graphics.fillStyle(customConfig.fillColor);
     }
 
     grid(): Grid { return this.qix.grid; }

@@ -1,13 +1,12 @@
 import 'phaser';
 
 import Qix from './scenes/qix';
-import {TestPolygonWithinPolygon} from "./scenes/test-polygon-within-polygon";
 
 export const config:GameConfig = {
     type: Phaser.AUTO,
     parent: 'content',
-    width: 300,
-    height: 200,
+    width: 800,
+    height: 500,
     resolution: 1,
     backgroundColor: "#555",
     scene: [
@@ -16,27 +15,25 @@ export const config:GameConfig = {
     banner: false
 };
 
-// export const config:GameConfig = {
-//     type: Phaser.AUTO,
-//     parent: 'content',
-//     width: 800,
-//     height: 600,
-//     resolution: 1,
-//     backgroundColor: "#555",
-//     scene: [
-//         TestPolygonWithinPolygon
-//     ],
-//     // physics: {
-//     //     default: 'arcade',
-//     //     arcade: {
-//     //         gravity: { y: 100 },
-//     //         debug: true,
-//     //         fps: 10
-//     //     }
-//     // },
-//     banner: false
-// };
-
+export const customConfig:GameCustomConfig = {
+    debug: true,
+    margin: 10,
+    frameHeight: 150,
+    infoHeight: 30,
+    debugTextAreaHeight: 300,
+    lineColor: 0x000,
+    fillColor: 0xCCAAFF
+};
 
 export const game = new Phaser.Game(config);
+
+export interface GameCustomConfig {
+    debug: boolean;
+    margin: integer;
+    frameHeight: integer;
+    infoHeight: integer;
+    debugTextAreaHeight: integer;
+    lineColor: integer;
+    fillColor: integer;
+}
 

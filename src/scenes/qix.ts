@@ -2,6 +2,7 @@ import {Player} from "../objects/player";
 import {Grid} from "../objects/grid";
 import {Info} from "../objects/info";
 import {Debug} from "../objects/debug";
+import {customConfig} from "../main";
 
 class Qix extends Phaser.Scene {
     player: Player;
@@ -23,8 +24,8 @@ class Qix extends Phaser.Scene {
         this.cursors = this.input.keyboard.createCursorKeys();
 
         this.grid = new Grid(this);
-        this.player = new Player(this, Grid.FRAME_MARGIN, Grid.FRAME_MARGIN);
-        this.info = new Info(this, Debug.DEBUG);
+        this.player = new Player(this, customConfig.margin, customConfig.margin);
+        this.info = new Info(this);
         this.debug = new Debug(this);
 
         // this.player = this.add.sprite(100, 100, 'player');
@@ -33,8 +34,6 @@ class Qix extends Phaser.Scene {
     }
 
     update(time: number, delta: number) {
-        this.debug.update(time, delta);
-
         if (this.grid.isIllegalMove(this.player, this.cursors)) {
             return;
         }
