@@ -1,4 +1,4 @@
-import Qix from "../scenes/qix";
+import QixScene from "../scenes/qix-scene";
 import {config, customConfig} from "../main";
 import {ExtPoint} from "./ext-point";
 import Line = Phaser.Geom.Line;
@@ -10,7 +10,7 @@ import Point = Phaser.Geom.Point;
 
 export class Debug {
 
-    qix: Qix;
+    scene: QixScene;
 
     debugTextArea$: JQuery;
 
@@ -23,8 +23,8 @@ export class Debug {
     graphics1: Graphics;
     graphics2: Graphics;
 
-    constructor(qix: Qix) {
-        this.qix = qix;
+    constructor(scene: QixScene) {
+        this.scene = scene;
 
         this.debugTextArea$ = $('#debugTextArea');
 
@@ -43,7 +43,7 @@ export class Debug {
     }
 
     createGraphics(y: integer = 0, withRect: boolean = false): Graphics {
-        const graphics: Graphics = this.qix.add.graphics();
+        const graphics: Graphics = this.scene.add.graphics();
         graphics.lineStyle(1, customConfig.lineColor);
         graphics.fillStyle(customConfig.fillColor);
 
@@ -61,9 +61,11 @@ export class Debug {
     }
 
     highlightPoints(points: ExtPoint[], radius = 3, fill = true, buffer = 500, destroyTime = 1200, color = 0x33AA55): void {
+        if (! customConfig.debug) return;
+
         const drawPointFunc = ((index: string) => {
             const point = points[parseInt(index)];
-            const g = this.qix.add.graphics();
+            const g = this.scene.add.graphics();
             g.lineStyle(1, color);
             g.fillStyle(color);
             if (fill) {
@@ -83,6 +85,8 @@ export class Debug {
     }
 
     drawLines(graphics: Graphics, lines: Line[], clearFirst: boolean = true): void {
+        if (! customConfig.debug) return;
+
         if (clearFirst) {
             graphics.clear();
         }
@@ -91,14 +95,17 @@ export class Debug {
     }
 
     drawPoints1(points: ExtPoint[], clearFirst: boolean = true): void {
+        if (! customConfig.debug) return;
         this.drawPoints(this.graphics1, points, this.graphics1Y, clearFirst);
     }
 
     drawPoints2(points: ExtPoint[], clearFirst: boolean = true): void {
+        if (! customConfig.debug) return;
         this.drawPoints(this.graphics2, points, this.graphics2Y, clearFirst);
     }
 
     drawPoints(graphics: Graphics, points: ExtPoint[], y: integer, clearFirst: boolean = true): void {
+        if (! customConfig.debug) return;
         if (clearFirst) {
             graphics.clear();
         }
@@ -113,19 +120,23 @@ export class Debug {
     }
 
     infoPoints(text: string, points: ExtPoint[]): void {
+        if (! customConfig.debug) return;
         this.table(text, points.map((pt) => pt.point));
     }
 
     infoLines(text: string, lines: Line[]): void {
+        if (! customConfig.debug) return;
         this.table(text, lines);
     }
 
     info(text: string): void {
+        if (! customConfig.debug) return;
         this.debugTextArea$.html(this.debugTextArea$.html() + text + '\n');
         this.infoScroll();
     }
 
     table(title: string, objects: any[]): void {
+        if (! customConfig.debug) return;
         const indent: string = '> ';
 
         this.info(title);
@@ -168,6 +179,7 @@ export class Debug {
     }
 
     infoScroll(): void {
+        if (! customConfig.debug) return;
         this.debugTextArea$.scrollTop((this.debugTextArea$[0].scrollHeight - this.debugTextArea$.height()));
     }
 

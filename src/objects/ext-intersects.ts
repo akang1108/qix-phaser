@@ -6,8 +6,6 @@ import {ExtPolygon} from "./ext-polygon";
 export class ExtIntersects {
 
     static PointToPolygon(p: Point, poly: ExtPolygon): boolean {
-
-
         return true;
     }
 

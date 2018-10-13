@@ -1,13 +1,18 @@
-import Qix from "../scenes/qix";
+import QixScene from "../scenes/qix-scene";
+import {config, customConfig} from "../main";
 
 export class Levels {
-    coverageTarget: number = 70;
+    coverageTarget: number = customConfig.startCoverageTarget;
+    currentLevel: number = customConfig.startLevel;
+    scene: QixScene;
 
-    currentLevel: number = 1;
-    numOfQix: number = 1;
-    numOfSparkies: number = 1;
+    constructor(qix: QixScene) {
+        this.scene = qix;
+    }
 
-    constructor() {
-
+    nextLevel(): void {
+        this.currentLevel++;
+        this.scene.player.hasMoved = false;
+        this.scene.sparkies.reset();
     }
 }

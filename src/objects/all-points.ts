@@ -1,17 +1,17 @@
 import Rectangle = Phaser.Geom.Rectangle;
 import {ExtPoint} from "./ext-point";
-import Qix from "../scenes/qix";
+import QixScene from "../scenes/qix-scene";
 import Polygon = Phaser.Geom.Polygon;
 import Line = Phaser.Geom.Line;
 import {GeomUtils} from "../utils/geom-utils";
 import {Debug} from "./debug";
 
 export class AllPoints {
-    qix: Qix;
+    scene: QixScene;
     innerPolygonPointsClockwise: ExtPoint[];
 
-    constructor(qix: Qix, rectangle: Rectangle) {
-        this.qix = qix;
+    constructor(scene: QixScene, rectangle: Rectangle) {
+        this.scene = scene;
         this.innerPolygonPointsClockwise = GeomUtils.getClockwiseRectanglePoints(rectangle);
     }
 
@@ -204,7 +204,7 @@ export class AllPoints {
             }
         }
 
-        this.qix.debug.infoLines('newInnerLines before adding inner polygon', newInnerLines);
+        this.scene.debug.infoLines('newInnerLines before adding inner polygon', newInnerLines);
 
         //
         // Add all the new polygon non-intersecting lines counter-clockwise
@@ -221,7 +221,7 @@ export class AllPoints {
 
         polygonLinesToInsert = GeomUtils.reverseLines(polygonLinesToInsert);
 
-        this.qix.debug.infoLines('polygonLinesToInsert', polygonLinesToInsert);
+        this.scene.debug.infoLines('polygonLinesToInsert', polygonLinesToInsert);
 
         // Calculate where to insert inner polygon lines
         if (polygonLinesToInsert.length > 0) {
@@ -233,11 +233,11 @@ export class AllPoints {
                 }
             }
 
-            this.qix.debug.info(`newInnerLinesInsertionIndex: ${newInnerLinesInsertionIndex}`);
+            this.scene.debug.info(`newInnerLinesInsertionIndex: ${newInnerLinesInsertionIndex}`);
             newInnerLines.splice(newInnerLinesInsertionIndex, 0, ...polygonLinesToInsert);
         }
 
-        // this.qix.debug.infoLines('newInnerLines after adding inner polygon', newInnerLines);
+        // this.scene.debug.infoLines('newInnerLines after adding inner polygon', newInnerLines);
 
         this.innerPolygonPointsClockwise = GeomUtils.getPolygonPointsFromLines(newInnerLines);
 

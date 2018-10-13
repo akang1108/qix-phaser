@@ -2,28 +2,28 @@ import Graphics = Phaser.GameObjects.Graphics;
 import Line = Phaser.Geom.Line;
 import {Player} from "./player";
 import {ExtPoint} from "./ext-point";
-import Qix from "../scenes/qix";
+import QixScene from "../scenes/qix-scene";
 import {Grid} from "./grid";
 import {customConfig} from "../main";
 
 
 export class CurrentLines {
-    qix: Qix;
+    scene: QixScene;
 
     graphics: Graphics;
     points: ExtPoint[] = [];
     lines: Line[] = [];
     line: Line;
 
-    constructor(qix: Qix) {
-        this.qix = qix;
+    constructor(scene: QixScene) {
+        this.scene = scene;
 
-        this.graphics = this.qix.add.graphics();
+        this.graphics = this.scene.add.graphics();
         this.graphics.lineStyle(1, customConfig.lineColor);
         this.graphics.fillStyle(customConfig.fillColor);
     }
 
-    grid(): Grid { return this.qix.grid; }
+    grid(): Grid { return this.scene.grid; }
 
     reset() {
         this.graphics.clear();

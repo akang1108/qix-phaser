@@ -2,7 +2,7 @@ import Graphics = Phaser.GameObjects.Graphics;
 import Rectangle = Phaser.Geom.Rectangle;
 import Text = Phaser.GameObjects.Text;
 import {config, customConfig} from "../main";
-import Qix from "../scenes/qix";
+import QixScene from "../scenes/qix-scene";
 import {StringUtils} from "../utils/string-utils";
 
 export class Info {
@@ -19,16 +19,16 @@ export class Info {
     gameText: Text;
     gameLines: string[];
 
-    qix: Qix;
+    scene: QixScene;
 
-    constructor(qix: Qix) {
-        this.qix = qix;
+    constructor(scene: QixScene) {
+        this.scene = scene;
 
-        this.graphics = qix.add.graphics();
+        this.graphics = scene.add.graphics();
         this.graphics.lineStyle(1, Info.OUTLINE_COLOR);
         this.rectangle = new Rectangle(
             customConfig.margin,
-            qix.grid.frame.rectangle.bottom + customConfig.margin,
+            scene.grid.frame.rectangle.bottom + customConfig.margin,
             config.width as number - 2*customConfig.margin,
             customConfig.infoHeight);
         this.graphics.strokeRectShape(this.rectangle);
@@ -36,7 +36,7 @@ export class Info {
         const gameTextOptions = {font: Info.TEXT_FONT, fill: Info.GAME_TEXT_COLOR_STR };
         const gameTextX = customConfig.margin + Info.PADDING;
         const gameTextY = this.rectangle.top + Info.PADDING;
-        this.gameText = qix.add.text(gameTextX, gameTextY, '', gameTextOptions);
+        this.gameText = scene.add.text(gameTextX, gameTextY, '', gameTextOptions);
     }
 
     x(): number { return this.rectangle.x; }
@@ -45,19 +45,21 @@ export class Info {
     height(): number { return this.rectangle.height; }
 
     updateGameText() {
-        const cols = [15, 40, 15, 40];
+        const cols = [15, 20, 15, 20, 15, 20];
 
-        const player = this.qix.player;
-        const grid = this.qix.grid;
-        const frame = this.qix.grid.frame;
-        const filledPolygons = this.qix.grid.filledPolygons;
+        const player = this.scene.player;
+        const grid = this.scene.grid;
+        const frame = this.scene.grid.frame;
+        const filledPolygons = this.scene.grid.filledPolygons;
 
         let data: string[] = [];
 
-        data.push(`% filled:`);
+        data.push(`% Filled:`);
         data.push(`${filledPolygons.percentAreaString()}`);
-        data.push(`yo`);
-        data.push(`hey`);
+        data.push(`% Target:`);
+        data.push(`${this.scene.levels.coverageTarget}`);
+        data.push(`Level:`);
+        data.push(`${this.scene.levels.currentLevel}`);
 
         this.gameLines = StringUtils.dataToLines(cols, data);
         this.gameText.setText(this.gameLines);

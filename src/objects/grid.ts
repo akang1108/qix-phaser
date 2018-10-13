@@ -3,16 +3,17 @@ import Rectangle = Phaser.Geom.Rectangle;
 import {config, customConfig} from "../main";
 import {Player} from "./player";
 import {ExtPoint} from "./ext-point";
-import Qix from "../scenes/qix";
+import QixScene from "../scenes/qix-scene";
 import {FilledPolygons} from "./filled-polygons";
 import {ExtRectangle} from "./ext-rectangle";
 import {CurrentLines} from "./current-lines";
 import {AllPoints} from "./all-points";
+import {Sparkies} from "./sparkies";
 
 export class Grid {
     static FRAME_HEIGHT_PERCENT: number = .7;
 
-    qix: Qix;
+    scene: QixScene;
     filledPolygons: FilledPolygons;
     currentLines: CurrentLines;
     allPoints: AllPoints;
@@ -21,24 +22,24 @@ export class Grid {
     frame: ExtRectangle;
     frameArea: number;
 
-    constructor(qix: Qix) {
-        this.qix = qix;
-        this.filledPolygons = new FilledPolygons(qix);
-        this.currentLines = new CurrentLines(qix);
+    constructor(scene: QixScene) {
+        this.scene = scene;
+        this.filledPolygons = new FilledPolygons(scene);
+        this.currentLines = new CurrentLines(scene);
         this.createFrame();
 
-        this.allPoints = new AllPoints(this.qix, this.frame.rectangle);
+        this.allPoints = new AllPoints(this.scene, this.frame.rectangle);
     }
 
     createFrame(): void {
-        this.frameGraphics = this.qix.add.graphics();
+        this.frameGraphics = this.scene.add.graphics();
         this.frameGraphics.lineStyle(1, customConfig.lineColor);
         this.frameGraphics.fillStyle(customConfig.fillColor);
 
         this.frame = new ExtRectangle(new Rectangle(
             customConfig.margin,
             customConfig.margin,
-            config.width as number - 2 * customConfig.margin,
+            config.width as number - (2 * customConfig.margin),
             customConfig.frameHeight));
 
         this.frameArea = this.frame.rectangle.height * this.frame.rectangle.width;
@@ -93,12 +94,12 @@ export class Grid {
         this.allPoints.updateNewInnerPoints(newPolygonPoints);
 
         // this.qix.debug.highlightPoints(newPolygonPoints, 3, true, 300, 700);
-        this.qix.debug.drawPoints1(newPolygonPoints);
-        this.qix.debug.infoPoints('newPolygonPoints', newPolygonPoints);
+        this.scene.debug.drawPoints1(newPolygonPoints);
+        this.scene.debug.infoPoints('newPolygonPoints', newPolygonPoints);
 
         // this.qix.debug.debugHighlightPoints(this.allPoints.innerPolygonPointsClockwise, 4, true, 300, 700, 0xBB22AA);
-        this.qix.debug.drawPoints2(this.allPoints.innerPolygonPointsClockwise);
-        this.qix.debug.infoPoints('innerPolygonPointsClockwise', this.allPoints.innerPolygonPointsClockwise);
+        this.scene.debug.drawPoints2(this.allPoints.innerPolygonPointsClockwise);
+        this.scene.debug.infoPoints('innerPolygonPointsClockwise', this.allPoints.innerPolygonPointsClockwise);
 
         // this.qix.debug.debugConsolePoints('points', this.currentLines.points);
 
@@ -133,9 +134,6 @@ export class Grid {
         return outOfBounds || withinFilledPolygon || hittingCurrentLines;
     }
 
-    checkForWin(): boolean {
-        // this.qix.debug.info(`${this.filledPolygons.percentArea()} ${this.qix.levels.coverageTarget}`);
-        // this.qix.debug.info(`${this.filledPolygons.percentArea()}`);
-        return (this.filledPolygons.percentArea() >= this.qix.levels.coverageTarget);
-    }
+
+
 }

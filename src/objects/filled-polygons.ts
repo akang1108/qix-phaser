@@ -2,7 +2,7 @@ import Graphics = Phaser.GameObjects.Graphics;
 import Point = Phaser.Geom.Point;
 import {ExtPoint} from "./ext-point";
 import {ExtPolygon} from "./ext-polygon";
-import Qix from "../scenes/qix";
+import QixScene from "../scenes/qix-scene";
 import {Grid} from "./grid";
 import {ExtRectangle} from "./ext-rectangle";
 
@@ -10,21 +10,21 @@ export class FilledPolygons {
     static LINE_COLOR: integer = 0x0000;
     static FILL_COLOR: integer = 0xCCAAFF;
 
-    qix: Qix;
+    scene: QixScene;
     polygons: ExtPolygon[] = [];
     graphics: Graphics;
 
-    constructor(qix: Qix) {
-        this.qix = qix;
+    constructor(scene: QixScene) {
+        this.scene = scene;
 
-        this.graphics = qix.add.graphics();
+        this.graphics = scene.add.graphics();
         this.graphics.lineStyle(1, FilledPolygons.LINE_COLOR);
         this.graphics.fillStyle(FilledPolygons.FILL_COLOR);
     }
 
-    grid(): Grid { return this.qix.grid; }
-    frame(): ExtRectangle { return this.qix.grid.frame; }
-    frameArea(): number { return this.qix.grid.frameArea; }
+    grid(): Grid { return this.scene.grid; }
+    frame(): ExtRectangle { return this.scene.grid.frame; }
+    frameArea(): number { return this.scene.grid.frameArea; }
 
     percentArea(): number {
         return this.polygons.reduce((total, currentPolygon) => {

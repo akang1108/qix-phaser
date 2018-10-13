@@ -15,6 +15,8 @@ export class Player {
 
     speed: integer;
 
+    hasMoved: boolean = false;
+
     constructor(scene: Scene, x: integer, y: integer) {
         this.speed = customConfig.speed;
         this.graphics = scene.add.graphics();
@@ -41,6 +43,10 @@ export class Player {
     }
 
     move(cursors: CursorKeys) {
+        if (! this.previousPoint.equals(this.point())) {
+            this.hasMoved = true;
+        }
+
         this.previousPoint = this.point();
 
         const newPosition = this.getMove(cursors);

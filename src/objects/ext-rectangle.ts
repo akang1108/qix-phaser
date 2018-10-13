@@ -17,19 +17,19 @@ export class ExtRectangle {
     height(): number { return this.rectangle.height; }
 
     pointOnTopSide(point: Point): boolean {
-        return Phaser.Geom.Intersects.PointToLine(point, this.rectangle.getLineA())
+        return Phaser.Geom.Intersects.PointToLineSegment(point, this.rectangle.getLineA())
     }
 
     pointOnRightSide(point: Point): boolean {
-        return Phaser.Geom.Intersects.PointToLine(point, this.rectangle.getLineB())
+        return Phaser.Geom.Intersects.PointToLineSegment(point, this.rectangle.getLineB())
     }
 
     pointOnBottomSide(point: Point): boolean {
-        return Phaser.Geom.Intersects.PointToLine(point, this.rectangle.getLineC())
+        return Phaser.Geom.Intersects.PointToLineSegment(point, this.rectangle.getLineC())
     }
 
     pointOnLeftSide(point: Point): boolean {
-        return Phaser.Geom.Intersects.PointToLine(point, this.rectangle.getLineD())
+        return Phaser.Geom.Intersects.PointToLineSegment(point, this.rectangle.getLineD())
     }
 
     pointOnOutline(point: Point): boolean {
