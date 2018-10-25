@@ -1,3 +1,6 @@
+import * as Phaser from 'phaser';
+declare type integer = number;
+
 import Rectangle = Phaser.Geom.Rectangle;
 import {ExtPoint} from "./ext-point";
 import QixScene from "../scenes/qix-scene";

@@ -1,3 +1,6 @@
+import * as Phaser from 'phaser';
+declare type integer = number;
+
 import {ExtPoint} from "../objects/ext-point";
 import Line = Phaser.Geom.Line;
 import Point = Phaser.Geom.Point;
@@ -197,5 +200,85 @@ export class GeomUtils {
         points.push(new ExtPoint(new Point(rectangle.left, rectangle.top)));
         return points;
     }
+
+    static calculatePointFromOrigin(origin: Point, angleDegrees: number, distance: number): Point {
+        const xAdder = distance * Math.cos(GeomUtils.degressToRadians(angleDegrees));
+        const yAdder = distance * Math.sin(GeomUtils.degressToRadians(angleDegrees));
+
+        return new Point(origin.x + xAdder, origin.y + yAdder);
+    }
+
+    static degressToRadians(degrees: number): number {
+        return (degrees * Math.PI) / 180;
+    }
+
+    static collisionLineSegments(line1: Line, line2: Line): boolean {
+        if (this.linesAreEqual(line1, line2)) {
+            return true;
+        }
+
+        const m1 = this.calculateSlope(line1);
+        const m2 = this.calculateSlope(line2);
+
+        const vertical1 = (m1 === Infinity || m1 === -Infinity);
+        const vertical2 = (m2 === Infinity || m2 === -Infinity);
+
+        const b1 = this.calculateYIntercept(line1);
+        const b2 = this.calculateYIntercept(line2);
+
+        const xWithinLine = (x: number, line: Line) => {
+            return (line.x1 <= x && x <= line.x2) || (line.x1 >= x && x >= line.x2);
+        };
+
+        const yWithinLine = (y: number, line: Line) => {
+            return (line.y1 <= y && y <= line.y2) || (line.y1 >= y && y >= line.y2);
+        };
+
+        if (vertical1 && vertical2) {
+            if (line1.x1 === line2.x1) {
+                return yWithinLine(line2.y1, line1) || yWithinLine(line2.y2, line1);
+            } else {
+                return false;
+            }
+        } else if (vertical1) {
+            const y = (m2 * line1.x1) + b2;
+            return yWithinLine(y, line1) && xWithinLine(line1.x1, line2)
+        } else if (vertical2) {
+            const y = (m1 * line2.x1) + b1;
+            return yWithinLine(y, line2) && xWithinLine(line2.x1, line1)
+        } else if (m1 === m2) {
+            if (b1 !== b2) {
+                return false;
+            } else {
+                return xWithinLine(line2.x1, line1) || xWithinLine(line2.x2, line1);
+            }
+        } else {
+            const x = (b2 - b1) / (m1 - m2);
+            const y = (m1 * x) + b1;
+
+            return xWithinLine(x, line1) && xWithinLine(x, line2);
+        }
+    }
+
+    static calculateSlope(line: Line): number {
+        return (line.y2 - line.y1) / (line.x2 - line.x1);
+    }
+
+    static calculateYIntercept(line: Line): number {
+        const m = this.calculateSlope(line);
+        return line.y1 - (m * line.x1);
+    }
+
+    static lineToString(line: any): string {
+        const l: Line = line as Line;
+        return `${l.x1},${l.y1},${l.x2},${l.y2}`;
+    };
+
+
+    // y = mx + b
+    // b = y - mx
+
+
+
 
 }

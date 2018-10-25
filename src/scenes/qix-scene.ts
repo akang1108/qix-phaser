@@ -1,3 +1,6 @@
+import * as Phaser from 'phaser';
+declare type integer = number;
+
 import {Player} from "../objects/player";
 import {Grid} from "../objects/grid";
 import {Info} from "../objects/info";
@@ -8,10 +11,12 @@ import TimerEvent = Phaser.Time.TimerEvent;
 import Scene = Phaser.Scene;
 import {Sparkies} from "../objects/sparkies";
 import Text = Phaser.GameObjects.Text;
+import {Qixes} from "../objects/qixes";
 
 class QixScene extends Phaser.Scene {
     player: Player;
     sparkies: Sparkies;
+    qixes: Qixes;
     grid: Grid;
     info: Info;
     cursors: CursorKeys;
@@ -37,6 +42,7 @@ class QixScene extends Phaser.Scene {
 
         this.pauseControl = new PauseControl();
         this.sparkies = new Sparkies(this);
+        this.qixes = new Qixes(this);
 
         // this.player = this.add.sprite(100, 100, 'player');
         // this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
@@ -53,7 +59,8 @@ class QixScene extends Phaser.Scene {
         }
 
         this.player.move(this.cursors);
-        this.sparkies.update();
+        // this.sparkies.update();
+        this.qixes.update();
         this.grid.update(this.player);
         this.info.updateGameText();
 
@@ -68,7 +75,8 @@ class QixScene extends Phaser.Scene {
 
 
     checkForLoss(): boolean {
-        return this.sparkies.checkForCollisionWithPlayer();
+        return false;
+        // return this.sparkies.checkForCollisionWithPlayer();
     }
 
     loseLife(time: number) {

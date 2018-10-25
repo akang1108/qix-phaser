@@ -1,3 +1,6 @@
+import * as Phaser from 'phaser';
+declare type integer = number;
+
 import Graphics = Phaser.GameObjects.Graphics;
 import Line = Phaser.Geom.Line;
 import {Player} from "./player";

@@ -1,3 +1,6 @@
+import * as Phaser from 'phaser';
+declare type integer = number;
+
 import QixScene from "../scenes/qix-scene";
 import {config, customConfig} from "../main";
 import {ExtPoint} from "./ext-point";

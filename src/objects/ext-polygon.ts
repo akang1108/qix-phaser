@@ -1,3 +1,6 @@
+import * as Phaser from 'phaser';
+declare type integer = number;
+
 import Polygon = Phaser.Geom.Polygon;
 import Line = Phaser.Geom.Line;
 import Point = Phaser.Geom.Point;

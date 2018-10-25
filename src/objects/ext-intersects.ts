@@ -1,3 +1,6 @@
+import * as Phaser from 'phaser';
+declare type integer = number;
+
 import Point = Phaser.Geom.Point;
 import {ExtPoint} from "./ext-point";
 import Polygon = Phaser.Geom.Polygon;

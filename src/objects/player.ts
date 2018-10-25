@@ -1,3 +1,6 @@
+import * as Phaser from 'phaser';
+declare type integer = number;
+
 import Graphics = Phaser.GameObjects.Graphics;
 import Scene = Phaser.Scene;
 import Circle = Phaser.Geom.Circle;

@@ -1,5 +1,10 @@
+import * as Phaser from 'phaser';
+declare type integer = number;
+
 import Rectangle = Phaser.Geom.Rectangle;
 import Point = Phaser.Geom.Point;
+import Line = Phaser.Geom.Line;
+import {GeomUtils} from "../utils/geom-utils";
 
 /**
  * Rectangle decorator
@@ -37,5 +42,47 @@ export class ExtRectangle {
             this.pointOnRightSide(point) ||
             this.pointOnBottomSide(point) ||
             this.pointOnLeftSide(point);
+    }
+
+    getLines(): Line[] {
+        return [
+            this.rectangle.getLineA(),
+            this.rectangle.getLineB(),
+            this.rectangle.getLineC(),
+            this.rectangle.getLineD() ];
+    }
+
+    collisionWithLines(lines: Line[]): boolean {
+        let collision = false;
+
+        for (let line of lines) {
+            collision = this.collisionWithLine(line);
+            if (collision) break;
+        }
+
+        return collision;
+    }
+
+    collisionWithLine(line: Line): boolean {
+        let collision = false;
+        // let debug = `[${GeomUtils.lineToString(line)}] `;
+
+        for (let l of this.getLines()) {
+            // debug += `${GeomUtils.lineToString(l)} `;
+            collision = GeomUtils.collisionLineSegments(l, line);
+            if (collision) {
+                console.info(`collision! ${GeomUtils.lineToString(line)} collision with ${GeomUtils.lineToString(l)}`);
+                break;
+            }
+        }
+
+        this.getLines().forEach((l: Line) => {
+        });
+
+
+
+
+
+        return collision;
     }
 }

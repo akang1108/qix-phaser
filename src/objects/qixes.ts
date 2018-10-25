@@ -1,16 +1,16 @@
 import * as Phaser from 'phaser';
 declare type integer = number;
 
-import {Sparky} from "./sparky";
 import QixScene from "../scenes/qix-scene";
 import {customConfig} from "../main";
 import {Player} from "./player";
+import {Qix} from "./qix";
 
-export class Sparkies {
-    sparkies: Sparky[] = [];
+export class Qixes {
+    qixes: Qix[] = [];
     scene: QixScene;
-    startingNumSparkies: number = customConfig.startNumSparkies;
-    sparkyStartupTimesSeconds: number[] = customConfig.sparkyStartupTimesSeconds;
+    startingNumQixes: number = customConfig.startNumQixes;
+    qixStartupTimeSeconds: number[] = customConfig.qixStartupTimesSeconds;
     START_TIME_UNDEFINED: number = 0;
     startTime: number = this.START_TIME_UNDEFINED;
 
@@ -20,28 +20,28 @@ export class Sparkies {
     }
 
     update() {
-        if (! this.scene.player.hasMoved) {
-            return;
-        }
+        // if (! this.scene.player.hasMoved) {
+        //     return;
+        // }
 
-        const nextStartupTimeMilliseconds = this.sparkyStartupTimesSeconds[this.sparkies.length] * 1000;
+        const nextStartupTimeMilliseconds = this.qixStartupTimeSeconds[this.qixes.length] * 1000;
         this.startTime = (this.startTime === this.START_TIME_UNDEFINED) ? this.scene.time.now : this.startTime;
         const timeSinceStart = this.scene.time.now - this.startTime;
 
         if (timeSinceStart > nextStartupTimeMilliseconds) {
-            this.sparkies.push(new Sparky(this.scene, 10, 10));
+            this.qixes.push(new Qix(this.scene, 200, 200));
         }
 
-        this.sparkies.forEach((sparky) => {
-            sparky.update();
+        this.qixes.forEach((qix) => {
+            qix.update();
         });
     }
 
     checkForCollisionWithPlayer(): boolean {
         let collision = false;
 
-        this.sparkies.forEach((sparky) => {
-           if (sparky.getExtPoint().equals(this.scene.player.point()))  {
+        this.qixes.forEach((qix) => {
+           if (qix.getExtPoint().equals(this.scene.player.point()))  {
                collision = true;
            }
         });
@@ -50,10 +50,10 @@ export class Sparkies {
     }
 
     reset() {
-        this.sparkies.forEach((sparky) => {
-            sparky.destroy();
+        this.qixes.forEach((qix) => {
+            qix.destroy();
         });
-        this.sparkies = [];
+        this.qixes = [];
         this.startTime = this.START_TIME_UNDEFINED;
     }
 

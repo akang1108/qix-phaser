@@ -37,6 +37,8 @@ export const customConfig:GameCustomConfig = {
     startLevel: 1,
     startNumSparkies: 1,
     sparkyStartupTimesSeconds: [ 3, 10, 30, 60, 200 ],
+    startNumQixes: 1,
+    qixStartupTimesSeconds: [1, 200, 500],
     levelWinPauseMs: 4000
 };
 
@@ -80,6 +82,8 @@ export interface GameCustomConfig {
     startLevel: number;
     startNumSparkies: number;
     sparkyStartupTimesSeconds: number[];
+    startNumQixes: number;
+    qixStartupTimesSeconds: number[];
     levelWinPauseMs: number;
 }
 
