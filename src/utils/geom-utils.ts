@@ -31,13 +31,57 @@ export class GeomUtils {
     }
 
     /**
+     * Check if line1 contains line2.
+     *
+     * @param line1
+     * @param line2
+     */
+    static lineContainsLine(line1: Line, line2: Line): boolean {
+        const m1Abs = Math.abs(this.calculateSlope(line1));
+        const m2Abs = Math.abs(this.calculateSlope(line2));
+
+        if (m1Abs === m2Abs) {
+            //
+            // Vertical lines
+            //
+            if (m1Abs === Infinity) {
+                if (line1.x1 !== line2.x1) {
+                    return false;
+                }
+
+                const line1MinY = Math.min(line1.y1, line1.y2);
+                const line1MaxY = Math.max(line1.y1, line1.y2);
+
+                return line1MinY <= line2.y1 && line1MaxY >= line2.y1 &&
+                    line1MinY <= line2.y2 && line1MaxY >= line2.y2;
+            }
+            //
+            // Non-vertical lines
+            //
+            else {
+                if (this.calculateYIntercept(line1) !== this.calculateYIntercept(line2)) {
+                    return false;
+                }
+
+                const line1MinX = Math.min(line1.x1, line1.x2);
+                const line1MaxX = Math.max(line1.x1, line1.x2);
+
+                return line1MinX <= line2.x1 && line1MaxX >= line2.x1 &&
+                    line1MinX <= line2.x2 && line1MaxX >= line2.x2;
+            }
+        } else {
+            return false;
+        }
+    }
+
+    /**
      * Only support horizontal and vertical lines
      *
      * @param {Line} line1
      * @param {Line} line2
      * @returns {boolean}
      */
-    static lineContainsLine(line1: Line, line2: Line): boolean {
+    static lContainsLine(line1: Line, line2: Line): boolean {
         // Vertical
         if (line1.x1 === line1.x2 && line1.x1 === line2.x1 && line1.x1 === line2.x2) {
             const line1Small = smaller(line1.y1, line1.y2);
@@ -214,6 +258,10 @@ export class GeomUtils {
 
     static collisionLineSegments(line1: Line, line2: Line): boolean {
         if (this.linesAreEqual(line1, line2)) {
+            return true;
+        }
+
+        if (this.lineContainsLine(line1, line2) || this.lineContainsLine(line2, line1)) {
             return true;
         }
 

@@ -2,8 +2,9 @@ import { expect } from 'chai';
 import 'mocha';
 import {GeomUtils} from "../src/utils/geom-utils";
 import * as Phaser from 'phaser';
-import Point = Phaser.Geom.Point;
 import Line = Phaser.Geom.Line;
+import Rectangle = Phaser.Geom.Rectangle;
+import {ExtRectangle} from "../src/objects/ext-rectangle";
 
 describe('line contains line function', () => {
     it('should work', () => {
@@ -24,7 +25,7 @@ describe('line contains line function', () => {
             new TestInfo([new Line(1, 1, 1, 5), new Line(1, 6, 1, 7)], false, 'vertical test'),
             new TestInfo([new Line(1, 5, 1, 1), new Line(1, 1, 1, 2)], true, 'vertical test'),
             new TestInfo([new Line(1, 5, 1, 1), new Line(1, 2, 1, 1)], true, 'vertical test'),
-            new TestInfo([new Line(1, 2, 3, 1), new Line(1, 2, 3, 1)], false, 'test')
+            new TestInfo([new Line(1, 2, 3, 1), new Line(1, 2, 3, 1)], true, 'equivalence test')
         ]);
 
         testInfos.tests.forEach((test) => {
@@ -41,6 +42,7 @@ describe('Check if 2 line segments collide', () => {
         const testInfos = new TestInfos([
             new TestInfo([new Line(1, 2, 5, 7), new Line(1, 2, 5, 7)], true, 'equivalent lines test'),
             new TestInfo([new Line(1, 2, 5, 7), new Line(5, 7, 2, 1)], true, 'equivalent reversed lines test'),
+            new TestInfo([new Line(2, 0, 5, 0), new Line(0, 0, 10, 0)], true, 'contained lines test'),
             new TestInfo([new Line(1, 1, 5, 1), new Line(5, 1, 10, 1)], true, 'same slope test'),
             new TestInfo([new Line(1, 1, 5, 1), new Line(3, 1, 10, 1)], true, 'same slope test'),
             new TestInfo([new Line(1, 1, 5, 1), new Line(5.1, 1, 10, 1)], false, 'same slope test'),
@@ -68,6 +70,24 @@ describe('Check if 2 line segments collide', () => {
         });
     });
 });
+
+describe('Check if non intersecting line outside rectangle', () => {
+    it('should work', () => {
+        const rectangle = new ExtRectangle(new Rectangle(100,100,500,500));
+        const testInfos = new TestInfos([
+            new TestInfo([new Line(1,1,2,2)], true, 'test'),
+        ]);
+
+        testInfos.tests.forEach((test) => {
+            console.info(`    ${test.title} ${GeomUtils.lineToString(test.data[0])} ${test.expectedResult}`);
+
+            const outside = rectangle.nonInteresectingLineOutside(test.data[0]);
+            expect(outside).to.equal(test.expectedResult, `${test}`);
+        });
+    });
+});
+
+
 
 class TestInfos {
     tests: TestInfo[];

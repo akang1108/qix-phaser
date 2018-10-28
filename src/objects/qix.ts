@@ -18,10 +18,13 @@ export class Qix {
 
     speed: integer;
 
-    NUM_LINES_MAX: number = 5;
-    LINE_DEGREES_INCREMENT: number = 10;
-    LINE_LENGTH_MIN: number = 20;
-    LINE_LENGTH_MAX: number = 60;
+    static NUM_LINES_MAX: number = 6;
+    static LINE_LENGTH_MIN: number = 20;
+    static LINE_LENGTH_MAX: number = 60;
+    static MIN_CHANGE_DEG = 135;
+    static MAX_CHANGE_DEG = 225;
+
+    lineDegreesIncrement: number = 4;
 
     x: integer;
 
@@ -36,7 +39,7 @@ export class Qix {
     // Current line being drawn for the Qix
     currentLineLength: number = 100;
     currentLineDegrees: number = 0;
-    rotationalPointDistance: number = 40;
+    rotationalPointDistance: number = 50;
 
     tick: integer = 1;
 
@@ -47,13 +50,14 @@ export class Qix {
         this.x = x;
         this.y = y;
 
-        this.speed = customConfig.speed;
+        // this.speed = customConfig.speed;
+        this.speed = 20;
 
-        this.redraw();
+        this.draw();
     }
 
     update(): void {
-        this.redraw();
+        this.moveAndDraw();
     }
 
     destroy(): void {
@@ -62,19 +66,23 @@ export class Qix {
         });
     }
 
-    redraw(): void {
+    private moveAndDraw(): void {
         if ((this.tickCount + 1) < this.tick) {
             this.tickCount++;
             return;
         }
 
-        this.move();
         this.tickCount = 0;
 
+        this.move();
+        this.draw();
+    }
+
+    private draw(): void {
         const line = this.createNextLine();
         const lineGraphics = this.createNextLineGraphics(line);
 
-        if (this.lines.length === this.NUM_LINES_MAX) {
+        if (this.lines.length === Qix.NUM_LINES_MAX) {
             this.lines.splice(0, 1);
             this.linesGraphics[0].destroy();
             this.linesGraphics.splice(0, 1);
@@ -85,24 +93,55 @@ export class Qix {
     }
 
     private getRandomDegrees(degrees: number) {
-        const MIN_CHANGE_DEG = 45;
-        const MAX_CHANGE_DEG = 315;
-
-        let randomDegrees = Math.random() * (MAX_CHANGE_DEG - MIN_CHANGE_DEG) + MIN_CHANGE_DEG;
+        let randomDegrees = Math.random() * (Qix.MAX_CHANGE_DEG - Qix.MIN_CHANGE_DEG) + Qix.MIN_CHANGE_DEG + degrees;
         randomDegrees = randomDegrees % 360;
         return randomDegrees;
     }
 
     private move(): void {
-        let collision = false;
+        let collision: boolean = false;
+        let count: number = 0;
+        let firstCollisionProcessed: boolean = false;
+        let secondCollisionProcessed: boolean = false;
+        let originalDirectionDegrees: number = this.directionDegrees;
+        let originalLineDegrees: number = this.currentLineDegrees;
 
         do {
-            const nextLine = this.getNextLine(this.getPoint(), this.currentLineDegrees, this.rotationalPointDistance, this.currentLineLength);
-            const currentLinesCopy = this.lines.map(l => l);
-            currentLinesCopy.push(nextLine);
-            let collision = this.scene.grid.frame.collisionWithLines(currentLinesCopy);
+            count++;
+
+            if (count > 1) {
+                console.info(`${count}: ${originalLineDegrees} ${this.directionDegrees} ${this.currentLineDegrees}`);
+            }
+
+            if (count > 360) {
+                console.info('DAMMMMM WENT TOO HIGH');
+                this.scene.pauseControl.pause();
+                break;
+            }
+
+            const nextPoint = GeomUtils.calculatePointFromOrigin(this.getPoint(), this.directionDegrees, this.speed);
+            const nextLine = this.getNextLine(nextPoint, this.currentLineDegrees, this.rotationalPointDistance, this.currentLineLength);
+            // const currentLinesCopy = this.lines.map(l => l);
+            // currentLinesCopy.push(nextLine);
+
+            collision = this.scene.grid.frame.collisionWithLine(nextLine) || this.scene.grid.frame.nonInteresectingLineOutside(nextLine);
+
             if (collision) {
-                this.directionDegrees = this.getRandomDegrees(this.directionDegrees);
+                if (secondCollisionProcessed) {
+                    this.directionDegrees += 1;
+                    this.directionDegrees = this.directionDegrees % 360;
+                } else if (firstCollisionProcessed && ! secondCollisionProcessed) {
+                    this.directionDegrees = (originalLineDegrees + Qix.MIN_CHANGE_DEG) % 360;
+                    secondCollisionProcessed = true;
+                } else {
+                    this.directionDegrees = this.getRandomDegrees(this.directionDegrees);
+                }
+
+                if (! firstCollisionProcessed) {
+                    this.currentLineDegrees -= (this.lineDegreesIncrement * 2);
+                    this.lineDegreesIncrement = -this.lineDegreesIncrement;
+                    firstCollisionProcessed = true;
+                }
             }
         } while (collision);
 
@@ -130,7 +169,7 @@ export class Qix {
 
     private createNextLine(): Line {
         const line = this.getNextLine(this.getPoint(), this.currentLineDegrees, this.rotationalPointDistance, this.currentLineLength);
-        this.currentLineDegrees += this.LINE_DEGREES_INCREMENT;
+        this.currentLineDegrees = (this.currentLineDegrees + this.lineDegreesIncrement) % 360;
         return line;
     }
 

@@ -12,8 +12,19 @@ import {GeomUtils} from "../utils/geom-utils";
 export class ExtRectangle {
     rectangle: Rectangle;
 
+    minX: number;
+    maxX: number;
+    minY: number;
+    maxY: number;
+
     constructor(r: Rectangle) {
         this.rectangle = r;
+
+        const lines = this.getLines();
+        this.minX = Math.min(...lines.map(l => Math.min(l.x1, l.x2)));
+        this.maxX = Math.max(...lines.map(l => Math.max(l.x1, l.x2)));
+        this.minY = Math.min(...lines.map(l => Math.min(l.y1, l.y2)));
+        this.maxY = Math.max(...lines.map(l => Math.max(l.y1, l.y2)));
     }
 
     x(): number { return this.rectangle.x; }
@@ -44,6 +55,10 @@ export class ExtRectangle {
             this.pointOnLeftSide(point);
     }
 
+    pointOutside(point: Point): boolean {
+        return point.x < this.minX || point.x > this.maxX || point.y < this.minY || point.y > this.maxY;
+    }
+
     getLines(): Line[] {
         return [
             this.rectangle.getLineA(),
@@ -71,18 +86,21 @@ export class ExtRectangle {
             // debug += `${GeomUtils.lineToString(l)} `;
             collision = GeomUtils.collisionLineSegments(l, line);
             if (collision) {
-                console.info(`collision! ${GeomUtils.lineToString(line)} collision with ${GeomUtils.lineToString(l)}`);
+                // console.info(`collision! ${GeomUtils.lineToString(line)} collision with ${GeomUtils.lineToString(l)}`);
                 break;
             }
         }
 
-        this.getLines().forEach((l: Line) => {
-        });
-
-
-
-
-
         return collision;
     }
+
+    /**
+     * Assumption that line segment does not intersect rectangle.
+     *
+     * @param line
+     */
+    nonInteresectingLineOutside(line: Line): boolean {
+        return this.pointOutside(new Point(line.x1, line.y1)) && this.pointOutside(new Point(line.x2, line.y2));
+    }
+
 }

@@ -143,6 +143,19 @@ class PauseControl {
         this.paused = true;
         this.winTime = time;
     }
+
+    pause(): void {
+        this.paused = true;
+    }
+
+    unpause(): void {
+        this.paused = false;
+    }
+
+    togglePause(): void {
+        this.paused = ! this.paused;
+    }
+
 }
 
 export default QixScene;
