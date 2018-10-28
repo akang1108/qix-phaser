@@ -59,7 +59,7 @@ class QixScene extends Phaser.Scene {
         }
 
         this.player.move(this.cursors);
-        // this.sparkies.update();
+        this.sparkies.update();
         this.qixes.update();
         this.grid.update(this.player);
         this.info.updateGameText();
@@ -73,10 +73,8 @@ class QixScene extends Phaser.Scene {
         }
     }
 
-
     checkForLoss(): boolean {
-        return false;
-        // return this.sparkies.checkForCollisionWithPlayer();
+        return this.sparkies.checkForCollisionWithPlayer() || this.qixes.checkForCollisionWithCurrentLines();
     }
 
     loseLife(time: number) {

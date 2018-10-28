@@ -41,7 +41,7 @@ export class Qix {
     currentLineDegrees: number = 0;
     rotationalPointDistance: number = 50;
 
-    tick: integer = 1;
+    tick: integer = 2;
 
     tickCount: integer = 0;
 
@@ -103,28 +103,23 @@ export class Qix {
         let count: number = 0;
         let firstCollisionProcessed: boolean = false;
         let secondCollisionProcessed: boolean = false;
-        let originalDirectionDegrees: number = this.directionDegrees;
         let originalLineDegrees: number = this.currentLineDegrees;
 
         do {
             count++;
 
-            if (count > 1) {
-                console.info(`${count}: ${originalLineDegrees} ${this.directionDegrees} ${this.currentLineDegrees}`);
-            }
-
             if (count > 360) {
-                console.info('DAMMMMM WENT TOO HIGH');
+                console.info('Houston we have a problem - not sure how to make the qix move again...');
                 this.scene.pauseControl.pause();
                 break;
             }
 
             const nextPoint = GeomUtils.calculatePointFromOrigin(this.getPoint(), this.directionDegrees, this.speed);
             const nextLine = this.getNextLine(nextPoint, this.currentLineDegrees, this.rotationalPointDistance, this.currentLineLength);
-            // const currentLinesCopy = this.lines.map(l => l);
-            // currentLinesCopy.push(nextLine);
 
-            collision = this.scene.grid.frame.collisionWithLine(nextLine) || this.scene.grid.frame.nonInteresectingLineOutside(nextLine);
+            collision = this.scene.grid.frame.collisionWithLine(nextLine) || this.scene.grid.frame.nonInteresectingLineOutside(nextLine) ||
+                this.scene.grid.filledPolygons.pointWithinPolygon(new ExtPoint(new Point(nextLine.x1, nextLine.y1))) ||
+                this.scene.grid.filledPolygons.pointWithinPolygon(new ExtPoint(new Point(nextLine.x2, nextLine.y2)));
 
             if (collision) {
                 if (secondCollisionProcessed) {
@@ -157,6 +152,11 @@ export class Qix {
 
     getExtPoint(): ExtPoint {
         return new ExtPoint(this.getPoint());
+    }
+
+    checkForCollisionWithCurrentLines(): boolean {
+        return GeomUtils.collisionLineSegmentArrays(this.lines, this.scene.grid.currentLines.lines) ||
+            (this.scene.grid.currentLines.line != null && GeomUtils.collisionLineSegmentArrays(this.lines, [ this.scene.grid.currentLines.line ]));
     }
 
     private createNextLineGraphics(line: Line): Graphics {

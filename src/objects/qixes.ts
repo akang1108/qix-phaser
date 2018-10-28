@@ -37,16 +37,14 @@ export class Qixes {
         });
     }
 
-    checkForCollisionWithPlayer(): boolean {
-        let collision = false;
+    checkForCollisionWithCurrentLines(): boolean {
+        for (let qix of this.qixes) {
+            if (qix.checkForCollisionWithCurrentLines()) {
+                return true;
+            }
+        }
 
-        this.qixes.forEach((qix) => {
-           if (qix.getExtPoint().equals(this.scene.player.point()))  {
-               collision = true;
-           }
-        });
-
-        return collision;
+        return false;
     }
 
     reset() {

@@ -16,7 +16,7 @@ export class CurrentLines {
     graphics: Graphics;
     points: ExtPoint[] = [];
     lines: Line[] = [];
-    line: Line;
+    line: Line = null;
 
     constructor(scene: QixScene) {
         this.scene = scene;

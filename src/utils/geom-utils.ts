@@ -256,6 +256,17 @@ export class GeomUtils {
         return (degrees * Math.PI) / 180;
     }
 
+    static collisionLineSegmentArrays(lines1: Line[], lines2: Line[]): boolean {
+        for (let line1 of lines1) {
+            for (let line2 of lines2) {
+                if (this.collisionLineSegments(line1, line2)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     static collisionLineSegments(line1: Line, line2: Line): boolean {
         if (this.linesAreEqual(line1, line2)) {
             return true;
