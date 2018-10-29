@@ -17,12 +17,14 @@ export class Qix {
     scene: QixScene;
 
     speed: integer;
+    tick: integer;
+    tickCount: integer = 0;
 
     static NUM_LINES_MAX: number = 6;
     static LINE_LENGTH_MIN: number = 20;
     static LINE_LENGTH_MAX: number = 60;
-    static MIN_CHANGE_DEG = 135;
-    static MAX_CHANGE_DEG = 225;
+    static MIN_CHANGE_DEG = 0;
+    static MAX_CHANGE_DEG = 360;
 
     lineDegreesIncrement: number = 4;
 
@@ -41,17 +43,13 @@ export class Qix {
     currentLineDegrees: number = 0;
     rotationalPointDistance: number = 50;
 
-    tick: integer = 2;
-
-    tickCount: integer = 0;
-
     constructor(scene: QixScene, x: integer, y: integer) {
         this.scene = scene;
         this.x = x;
         this.y = y;
 
-        // this.speed = customConfig.speed;
-        this.speed = 20;
+        this.speed = customConfig.qixSpeed;
+        this.tick = customConfig.qixTick;
 
         this.draw();
     }

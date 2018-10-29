@@ -15,7 +15,11 @@ export class Levels {
 
     nextLevel(): void {
         this.currentLevel++;
+        customConfig.qixSpeed++;
+        customConfig.qixTick--;
+
         this.scene.player.hasMoved = false;
         this.scene.sparkies.reset();
+        this.scene.qixes.reset();
     }
 }

@@ -29,7 +29,7 @@ export class Sparky {
 
     direction: Direction;
 
-    tick: integer = 1;
+    tick: integer;
 
     tickCount: integer = 0;
 
@@ -38,7 +38,8 @@ export class Sparky {
         this.x = x;
         this.y = y;
 
-        this.speed = customConfig.speed;
+        this.speed = customConfig.sparkySpeed;
+        this.tick = customConfig.sparkyTick;
 
         this.redraw();
     }

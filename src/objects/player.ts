@@ -21,7 +21,7 @@ export class Player {
     hasMoved: boolean = false;
 
     constructor(scene: Scene, x: integer, y: integer) {
-        this.speed = customConfig.speed;
+        this.speed = customConfig.playerSpeed;
         this.graphics = scene.add.graphics();
         this.graphics.lineStyle(1, customConfig.playerColor);
         this.graphics.fillStyle(customConfig.playerColor);
